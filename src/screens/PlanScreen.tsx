@@ -1,0 +1,332 @@
+import React, { useState } from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  TouchableOpacity,
+  StatusBar,
+} from 'react-native';
+import { PrimaryButton } from '../components/ui/PrimaryButton';
+import { skills } from '../data/skills';
+
+type Difficulty = 'facile' | 'moyen' | 'difficile';
+
+export function PlanScreen() {
+  const [selectedSkill, setSelectedSkill] = useState(skills[0]);
+  const [difficulty, setDifficulty] = useState<Difficulty>('moyen');
+
+  const weeklyTime = difficulty === 'facile' ? "2h30" : difficulty === 'moyen' ? '4h' : '6h';
+  const sessionsPerWeek = difficulty === 'facile' ? 3 : difficulty === 'moyen' ? 5 : 7;
+
+  return (
+    <View style={styles.container}>
+      <StatusBar barStyle="light-content" />
+
+      <ScrollView showsVerticalScrollIndicator={false}>
+        <View style={styles.header}>
+          <Text style={styles.title}>Générateur de Plan</Text>
+          <Text style={styles.subtitle}>
+            Créez un plan d'entraînement personnalisé
+          </Text>
+        </View>
+
+        {/* Skill Selection */}
+        <View style={styles.card}>
+          <Text style={styles.cardLabel}>Compétence</Text>
+          <View style={styles.skillGrid}>
+            {skills.map((skill) => {
+              const isSelected = selectedSkill.id === skill.id;
+              return (
+                <TouchableOpacity
+                  key={skill.id}
+                  onPress={() => setSelectedSkill(skill)}
+                  style={[
+                    styles.skillButton,
+                    {
+                      backgroundColor: isSelected
+                        ? 'rgba(226, 62, 87, 0.15)'
+                        : 'rgba(255, 255, 255, 0.03)',
+                      borderColor: isSelected ? '#E23E57' : 'rgba(255, 255, 255, 0.1)',
+                    }
+                  ]}
+                >
+                  <View
+                    style={[
+                      styles.skillIconContainer,
+                      { backgroundColor: `${skill.color}20` }
+                    ]}
+                  >
+                    <Text style={{ fontSize: 16 }}>{getIconEmoji(skill.icon)}</Text>
+                  </View>
+                  <Text style={styles.skillName}>{skill.name}</Text>
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+        </View>
+
+        {/* Difficulty Selection */}
+        <View style={styles.card}>
+          <Text style={styles.cardLabel}>Difficulté</Text>
+          <View style={styles.difficultyContainer}>
+            {(['facile', 'moyen', 'difficile'] as Difficulty[]).map((level) => (
+              <TouchableOpacity
+                key={level}
+                onPress={() => setDifficulty(level)}
+                style={[
+                  styles.difficultyButton,
+                  {
+                    backgroundColor:
+                      difficulty === level
+                        ? '#E23E57'
+                        : 'rgba(255, 255, 255, 0.05)',
+                  }
+                ]}
+              >
+                <Text
+                  style={[
+                    styles.difficultyText,
+                    { color: difficulty === level ? '#ffffff' : '#94A3B8' }
+                  ]}
+                >
+                  {level.charAt(0).toUpperCase() + level.slice(1)}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        </View>
+
+        {/* Generated Plan Summary */}
+        <View style={styles.card}>
+          <View style={styles.planHeader}>
+            <Text style={styles.planIcon}>✨</Text>
+            <Text style={styles.planTitle}>Plan Généré</Text>
+          </View>
+
+          <View style={styles.planContent}>
+            <View style={styles.planItem}>
+              <View style={[styles.planIconBox, { backgroundColor: 'rgba(59, 130, 246, 0.2)' }]}>
+                <Text style={styles.planIconEmoji}>🎯</Text>
+              </View>
+              <View style={styles.planTextContainer}>
+                <Text style={styles.planLabel}>Séances par semaine</Text>
+                <Text style={styles.planValue}>{sessionsPerWeek} séances</Text>
+              </View>
+            </View>
+
+            <View style={styles.planItem}>
+              <View style={[styles.planIconBox, { backgroundColor: 'rgba(139, 92, 246, 0.2)' }]}>
+                <Text style={styles.planIconEmoji}>⏱</Text>
+              </View>
+              <View style={styles.planTextContainer}>
+                <Text style={styles.planLabel}>Temps hebdomadaire estimé</Text>
+                <Text style={styles.planValue}>{weeklyTime}</Text>
+              </View>
+            </View>
+
+            <View style={styles.planDescription}>
+              <Text style={styles.descriptionText}>
+                Votre plan personnalisé pour{' '}
+                <Text style={styles.highlight}>{selectedSkill.name}</Text> inclut des
+                exercices progressifs adaptés à votre niveau ({selectedSkill.level}) et à
+                la difficulté sélectionnée.
+              </Text>
+            </View>
+          </View>
+        </View>
+
+        {/* Action Buttons */}
+        <View style={styles.actionContainer}>
+          <TouchableOpacity
+            style={styles.regenerateButton}
+            onPress={() => console.log('Régénérer')}
+          >
+            <Text style={styles.regenerateText}>Régénérer</Text>
+          </TouchableOpacity>
+          <View style={styles.validateButtonContainer}>
+            <PrimaryButton fullWidth onPress={() => console.log('Valider')}>
+              Valider
+            </PrimaryButton>
+          </View>
+        </View>
+      </ScrollView>
+    </View>
+  );
+}
+
+const getIconEmoji = (iconName: string): string => {
+  const iconMap: Record<string, string> = {
+    music: '🎵',
+    camera: '📷',
+    dumbbell: '🏋️',
+    translate: '🌐',
+  };
+  return iconMap[iconName] || '⭐';
+};
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#311D3F',
+    paddingBottom: 100,
+  },
+  header: {
+    paddingHorizontal: 20,
+    paddingTop: 60,
+    paddingBottom: 24,
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#F8FAFC',
+    marginBottom: 8,
+  },
+  subtitle: {
+    fontSize: 14,
+    color: '#94A3B8',
+  },
+  card: {
+    marginHorizontal: 20,
+    marginTop: 16,
+    borderRadius: 16,
+    padding: 20,
+    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.1)',
+  },
+  cardLabel: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    color: '#F8FAFC',
+    marginBottom: 16,
+  },
+  skillGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 12,
+  },
+  skillButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 12,
+    borderRadius: 16,
+    borderWidth: 1,
+    gap: 8,
+  },
+  skillIconContainer: {
+    width: 32,
+    height: 32,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  skillName: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#F8FAFC',
+  },
+  difficultyContainer: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  difficultyButton: {
+    flex: 1,
+    paddingVertical: 12,
+    borderRadius: 16,
+    alignItems: 'center',
+  },
+  difficultyText: {
+    fontSize: 14,
+    fontWeight: 'bold',
+  },
+  planHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 20,
+  },
+  planIcon: {
+    fontSize: 20,
+  },
+  planTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#F8FAFC',
+  },
+  planContent: {
+    gap: 16,
+  },
+  planItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 16,
+    borderRadius: 16,
+    backgroundColor: 'rgba(59, 130, 246, 0.1)',
+    borderWidth: 1,
+    borderColor: 'rgba(59, 130, 246, 0.2)',
+  },
+  planIconBox: {
+    width: 48,
+    height: 48,
+    borderRadius: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  planIconEmoji: {
+    fontSize: 20,
+  },
+  planTextContainer: {
+    flex: 1,
+    marginLeft: 12,
+  },
+  planLabel: {
+    fontSize: 12,
+    color: '#94A3B8',
+    fontWeight: '600',
+  },
+  planValue: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    color: '#F8FAFC',
+  },
+  planDescription: {
+    paddingTop: 16,
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(255, 255, 255, 0.1)',
+  },
+  descriptionText: {
+    fontSize: 14,
+    color: '#94A3B8',
+    lineHeight: 20,
+  },
+  highlight: {
+    color: '#F8FAFC',
+    fontWeight: '600',
+  },
+  actionContainer: {
+    flexDirection: 'row',
+    gap: 16,
+    paddingHorizontal: 20,
+    marginTop: 16,
+    marginBottom: 40,
+  },
+  regenerateButton: {
+    flex: 1,
+    paddingVertical: 16,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: '#8B5CF6',
+    backgroundColor: 'rgba(139, 92, 246, 0.1)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  regenerateText: {
+    color: '#8B5CF6',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  validateButtonContainer: {
+    flex: 1,
+  },
+});

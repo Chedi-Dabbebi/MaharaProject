@@ -1,0 +1,95 @@
+export interface Task {
+  id: string;
+  title: string;
+  duration: string;
+  xp: number;
+  completed: boolean;
+}
+
+export interface Skill {
+  id: string;
+  name: string;
+  icon: string;
+  color: string;
+  progress: number;
+  level: number;
+  xp: number;
+  maxXp: number;
+  streak: number;
+  tasks: Task[];
+}
+
+export const skills: Skill[] = [
+  {
+    id: '1',
+    name: 'Musique',
+    icon: 'music',
+    color: '#E23E57',
+    progress: 65,
+    level: 5,
+    xp: 650,
+    maxXp: 1000,
+    streak: 7,
+    tasks: [
+      { id: 'm1', title: 'Pratiquer les gammes', duration: '20 min', xp: 50, completed: true },
+      { id: 'm2', title: 'Apprendre un nouveau morceau', duration: '30 min', xp: 75, completed: false },
+      { id: 'm3', title: 'Exercices de rythme', duration: '15 min', xp: 40, completed: false },
+      { id: 'm4', title: 'Théorie musicale', duration: '25 min', xp: 60, completed: true },
+      { id: 'm5', title: 'Improvisation', duration: '20 min', xp: 50, completed: false },
+    ],
+  },
+  {
+    id: '2',
+    name: 'Photographie',
+    icon: 'camera',
+    color: '#88304E',
+    progress: 40,
+    level: 3,
+    xp: 400,
+    maxXp: 1000,
+    streak: 3,
+    tasks: [
+      { id: 'p1', title: 'Prendre 10 photos de paysage', duration: '45 min', xp: 80, completed: false },
+      { id: 'p2', title: 'Retouche photo', duration: '30 min', xp: 60, completed: true },
+      { id: 'p3', title: 'Étudier la composition', duration: '20 min', xp: 50, completed: false },
+      { id: 'p4', title: 'Portrait en lumière naturelle', duration: '40 min', xp: 70, completed: false },
+      { id: 'p5', title: 'Analyser les photos des maîtres', duration: '25 min', xp: 55, completed: false },
+    ],
+  },
+  {
+    id: '3',
+    name: 'Fitness',
+    icon: 'dumbbell',
+    color: '#C94C6D',
+    progress: 80,
+    level: 7,
+    xp: 800,
+    maxXp: 1000,
+    streak: 14,
+    tasks: [
+      { id: 'f1', title: 'Cardio 30 minutes', duration: '30 min', xp: 60, completed: true },
+      { id: 'f2', title: 'Musculation haut du corps', duration: '45 min', xp: 80, completed: true },
+      { id: 'f3', title: 'Yoga & stretching', duration: '20 min', xp: 40, completed: false },
+      { id: 'f4', title: 'Course 5km', duration: '35 min', xp: 70, completed: true },
+      { id: 'f5', title: 'Exercices abdominaux', duration: '15 min', xp: 35, completed: false },
+    ],
+  },
+  {
+    id: '4',
+    name: 'Langues',
+    icon: 'translate',
+    color: '#A0395F',
+    progress: 55,
+    level: 4,
+    xp: 550,
+    maxXp: 1000,
+    streak: 5,
+    tasks: [
+      { id: 'l1', title: 'Vocabulaire - 20 nouveaux mots', duration: '15 min', xp: 45, completed: true },
+      { id: 'l2', title: 'Conversation avec natif', duration: '30 min', xp: 75, completed: false },
+      { id: 'l3', title: 'Grammaire - temps du passé', duration: '25 min', xp: 60, completed: false },
+      { id: 'l4', title: 'Écouter un podcast', duration: '20 min', xp: 50, completed: true },
+      { id: 'l5', title: 'Écrire un texte court', duration: '20 min', xp: 50, completed: false },
+    ],
+  },
+];

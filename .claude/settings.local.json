@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(//c/Users/dabbe/Downloads/**)",
+      "Bash(unzip -l src.zip)"
+    ]
+  }
+}

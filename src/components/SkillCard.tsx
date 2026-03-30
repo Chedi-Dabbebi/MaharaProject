@@ -1,0 +1,142 @@
+import React from 'react';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { ProgressBar } from './ui/ProgressBar';
+
+interface SkillCardProps {
+  id: string;
+  name: string;
+  icon: string;
+  color: string;
+  progress: number;
+  level: number;
+  onPress?: () => void;
+}
+
+// Helper to create a lighter version of the color
+function lightenColor(color: string, percent: number): string {
+  try {
+    const num = parseInt(color.replace('#', ''), 16);
+    const amt = Math.round(2.55 * percent);
+    const R = Math.min(255, (num >> 16) + amt);
+    const G = Math.min(255, ((num >> 8) & 0x00ff) + amt);
+    const B = Math.min(255, (num & 0x0000ff) + amt);
+    return `#${(0x1000000 + R * 0x10000 + G * 0x100 + B).toString(16).slice(1)}`;
+  } catch {
+    return color;
+  }
+}
+
+// Icon mapping using emoji for simplicity - can be replaced with react-native-vector-icons
+const getIconEmoji = (iconName: string): string => {
+  const iconMap: Record<string, string> = {
+    music: '🎵',
+    camera: '📷',
+    dumbbell: '🏋️',
+    translate: '🌐',
+  };
+  return iconMap[iconName] || '⭐';
+};
+
+export function SkillCard({ id, name, icon, color, progress, level, onPress }: SkillCardProps) {
+  const lightColor = lightenColor(color, 20);
+
+  return (
+    <TouchableOpacity
+      style={[
+        styles.container,
+        { borderColor: `${color}40` }
+      ]}
+      onPress={onPress}
+      activeOpacity={0.8}
+    >
+      {/* Icon */}
+      <View
+        style={[
+          styles.iconWrapper,
+          {
+            backgroundColor: color,
+            shadowColor: color,
+          }
+        ]}
+      >
+        <Text style={styles.iconEmoji}>{getIconEmoji(icon)}</Text>
+      </View>
+
+      {/* Content */}
+      <View style={styles.content}>
+        <Text style={styles.name}>{name}</Text>
+        <View
+          style={[
+            styles.levelBadge,
+            { backgroundColor: `${color}25` }
+          ]}
+        >
+          <Text style={[styles.levelText, { color: lightColor }]}>
+            Niveau {level}
+          </Text>
+        </View>
+      </View>
+
+      {/* Progress */}
+      <View style={styles.progressContainer}>
+        <ProgressBar progress={progress} color={color} height={6} />
+        <Text style={styles.progressText}>{progress}% complété</Text>
+      </View>
+    </TouchableOpacity>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    borderRadius: 24,
+    padding: 20,
+    borderWidth: 1,
+    backgroundColor: 'rgba(255, 255, 255, 0.08)',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.2,
+    shadowRadius: 32,
+  },
+  iconWrapper: {
+    width: 56,
+    height: 56,
+    borderRadius: 18,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.25,
+    shadowRadius: 24,
+  },
+  iconEmoji: {
+    fontSize: 28,
+  },
+  content: {
+    marginBottom: 16,
+  },
+  name: {
+    color: '#F8FAFC',
+    fontSize: 16,
+    fontWeight: 'bold',
+    marginBottom: 8,
+  },
+  levelBadge: {
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 8,
+    alignSelf: 'flex-start',
+  },
+  levelText: {
+    fontSize: 12,
+    fontWeight: 'bold',
+  },
+  progressContainer: {
+    gap: 8,
+  },
+  progressText: {
+    color: '#94A3B8',
+    fontSize: 12,
+    fontWeight: '600',
+  },
+});

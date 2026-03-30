@@ -1,43 +1,71 @@
-/**
- * Sample React Native App
- * https://github.com/facebook/react-native
- *
- * @format
- */
+import React, { useState } from 'react';
+import { StyleSheet, View, StatusBar } from 'react-native';
+import { HomeScreen } from './src/screens/HomeScreen';
+import { SkillDetailScreen } from './src/screens/SkillDetailScreen';
+import { PlanScreen } from './src/screens/PlanScreen';
+import { StatsScreen } from './src/screens/StatsScreen';
+import { ProfileScreen } from './src/screens/ProfileScreen';
+import { BottomNavigation } from './src/components/BottomNavigation';
+import { skills } from './src/data/skills';
 
-import { NewAppScreen } from '@react-native/new-app-screen';
-import { StatusBar, StyleSheet, useColorScheme, View } from 'react-native';
-import {
-  SafeAreaProvider,
-  useSafeAreaInsets,
-} from 'react-native-safe-area-context';
+type Screen = 'home' | 'skillDetail' | 'plan' | 'stats' | 'profile';
 
-function App() {
-  const isDarkMode = useColorScheme() === 'dark';
+const App = () => {
+  const [currentScreen, setCurrentScreen] = useState<Screen>('home');
+  const [selectedSkillId, setSelectedSkillId] = useState<string | null>(null);
 
-  return (
-    <SafeAreaProvider>
-      <StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} />
-      <AppContent />
-    </SafeAreaProvider>
-  );
-}
+  const handleSkillPress = (skillId: string) => {
+    setSelectedSkillId(skillId);
+    setCurrentScreen('skillDetail');
+  };
 
-function AppContent() {
-  const safeAreaInsets = useSafeAreaInsets();
+  const handleNavigate = (screen: Screen) => {
+    setCurrentScreen(screen);
+  };
+
+  const handleBack = () => {
+    setCurrentScreen('home');
+    setSelectedSkillId(null);
+  };
+
+  const selectedSkill = skills.find((s) => s.id === selectedSkillId);
+
+  const renderScreen = () => {
+    switch (currentScreen) {
+      case 'home':
+        return <HomeScreen onSkillPress={handleSkillPress} />;
+      case 'skillDetail':
+        return selectedSkill ? (
+          <SkillDetailScreen skill={selectedSkill} onBack={handleBack} />
+        ) : (
+          <HomeScreen onSkillPress={handleSkillPress} />
+        );
+      case 'plan':
+        return <PlanScreen />;
+      case 'stats':
+        return <StatsScreen />;
+      case 'profile':
+        return <ProfileScreen />;
+      default:
+        return <HomeScreen onSkillPress={handleSkillPress} />;
+    }
+  };
 
   return (
     <View style={styles.container}>
-      <NewAppScreen
-        templateFileName="App.tsx"
-        safeAreaInsets={safeAreaInsets}
-      />
+      <StatusBar barStyle="light-content" />
+      <View style={styles.screenContainer}>{renderScreen()}</View>
+      <BottomNavigation activeScreen={currentScreen} onNavigate={handleNavigate} />
     </View>
   );
-}
+};
 
 const styles = StyleSheet.create({
   container: {
+    flex: 1,
+    backgroundColor: '#311D3F',
+  },
+  screenContainer: {
     flex: 1,
   },
 });
