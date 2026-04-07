@@ -2,7 +2,7 @@ import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { Icon, IconName } from './ui/Icon';
 
-type Screen = 'home' | 'plan' | 'stats' | 'profile';
+type Screen = 'loading' | 'login' | 'home' | 'skillDetail' | 'plan' | 'stats' | 'profile';
 
 interface BottomNavigationProps {
   activeScreen: Screen;

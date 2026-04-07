@@ -5,13 +5,15 @@ import { SkillDetailScreen } from './src/screens/SkillDetailScreen';
 import { PlanScreen } from './src/screens/PlanScreen';
 import { StatsScreen } from './src/screens/StatsScreen';
 import { ProfileScreen } from './src/screens/ProfileScreen';
+import { LoadingScreen } from './src/screens/LoadingScreen';
+import { LoginScreen } from './src/screens/LoginScreen';
 import { BottomNavigation } from './src/components/BottomNavigation';
 import { skills } from './src/data/skills';
 
-type Screen = 'home' | 'skillDetail' | 'plan' | 'stats' | 'profile';
+type Screen = 'loading' | 'login' | 'home' | 'skillDetail' | 'plan' | 'stats' | 'profile';
 
 const App = () => {
-  const [currentScreen, setCurrentScreen] = useState<Screen>('home');
+  const [currentScreen, setCurrentScreen] = useState<Screen>('loading');
   const [selectedSkillId, setSelectedSkillId] = useState<string | null>(null);
 
   const handleSkillPress = (skillId: string) => {
@@ -32,6 +34,10 @@ const App = () => {
 
   const renderScreen = () => {
     switch (currentScreen) {
+      case 'loading':
+        return <LoadingScreen onFinish={() => handleNavigate('login')} />;
+      case 'login':
+        return <LoginScreen onLogin={() => handleNavigate('home')} />;
       case 'home':
         return <HomeScreen onSkillPress={handleSkillPress} />;
       case 'skillDetail':
@@ -55,7 +61,9 @@ const App = () => {
     <View style={styles.container}>
       <StatusBar barStyle="light-content" />
       <View style={styles.screenContainer}>{renderScreen()}</View>
-      <BottomNavigation activeScreen={currentScreen} onNavigate={handleNavigate} />
+      {currentScreen !== 'loading' && currentScreen !== 'login' && (
+        <BottomNavigation activeScreen={currentScreen} onNavigate={handleNavigate} />
+      )}
     </View>
   );
 };
