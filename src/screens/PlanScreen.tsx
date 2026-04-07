@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   StatusBar,
 } from 'react-native';
+import { Icon, IconName } from '../components/ui/Icon';
 import { PrimaryButton } from '../components/ui/PrimaryButton';
 import { skills } from '../data/skills';
 
@@ -57,7 +58,7 @@ export function PlanScreen() {
                       { backgroundColor: `${skill.color}20` }
                     ]}
                   >
-                    <Text style={{ fontSize: 16 }}>{getIconEmoji(skill.icon)}</Text>
+                    <Icon name={getIconName(skill.icon)} size={16} color="#F8FAFC" />
                   </View>
                   <Text style={styles.skillName}>{skill.name}</Text>
                 </TouchableOpacity>
@@ -100,14 +101,14 @@ export function PlanScreen() {
         {/* Generated Plan Summary */}
         <View style={styles.card}>
           <View style={styles.planHeader}>
-            <Text style={styles.planIcon}>✨</Text>
+            <Icon name="sparkle" size={20} color="#F8FAFC" />
             <Text style={styles.planTitle}>Plan Généré</Text>
           </View>
 
           <View style={styles.planContent}>
             <View style={styles.planItem}>
               <View style={[styles.planIconBox, { backgroundColor: 'rgba(59, 130, 246, 0.2)' }]}>
-                <Text style={styles.planIconEmoji}>🎯</Text>
+                <Icon name="target" size={20} color="#3B82F6" />
               </View>
               <View style={styles.planTextContainer}>
                 <Text style={styles.planLabel}>Séances par semaine</Text>
@@ -117,7 +118,7 @@ export function PlanScreen() {
 
             <View style={styles.planItem}>
               <View style={[styles.planIconBox, { backgroundColor: 'rgba(139, 92, 246, 0.2)' }]}>
-                <Text style={styles.planIconEmoji}>⏱</Text>
+                <Icon name="time" size={20} color="#8B5CF6" />
               </View>
               <View style={styles.planTextContainer}>
                 <Text style={styles.planLabel}>Temps hebdomadaire estimé</Text>
@@ -155,14 +156,14 @@ export function PlanScreen() {
   );
 }
 
-const getIconEmoji = (iconName: string): string => {
-  const iconMap: Record<string, string> = {
-    music: '🎵',
-    camera: '📷',
-    dumbbell: '🏋️',
-    translate: '🌐',
+const getIconName = (iconName: string): IconName => {
+  const iconMap: Record<string, IconName> = {
+    music: 'music',
+    camera: 'camera',
+    dumbbell: 'fitness',
+    translate: 'language',
   };
-  return iconMap[iconName] || '⭐';
+  return iconMap[iconName] || 'star';
 };
 
 const styles = StyleSheet.create({

@@ -6,6 +6,7 @@ import {
   ScrollView,
   StatusBar,
 } from 'react-native';
+import { Icon, IconName } from '../components/ui/Icon';
 import { LevelBadge } from '../components/ui/LevelBadge';
 import { ProgressBar } from '../components/ui/ProgressBar';
 import { skills } from '../data/skills';
@@ -41,7 +42,7 @@ export function StatsScreen() {
           <View style={styles.xpHeader}>
             <Text style={styles.xpLabel}>XP Total</Text>
             <View style={styles.sparkleContainer}>
-              <Text style={styles.sparkle}>✨</Text>
+              <Icon name="sparkle" size={20} color="#FFFFFF" />
             </View>
           </View>
           <Text style={styles.xpValue}>{totalXP.toLocaleString()}</Text>
@@ -58,7 +59,7 @@ export function StatsScreen() {
                 { backgroundColor: 'rgba(245, 158, 11, 0.15)' }
               ]}
             >
-              <Text style={styles.statIcon}>🔥</Text>
+              <Icon name="fire" size={20} color="#F59E0B" />
             </View>
             <Text style={styles.statValue}>{longestStreak}</Text>
             <Text style={styles.statLabel}>Jours de suite</Text>
@@ -72,7 +73,7 @@ export function StatsScreen() {
                 { backgroundColor: 'rgba(245, 158, 11, 0.15)' }
               ]}
             >
-              <Text style={styles.statIcon}>🏆</Text>
+              <Icon name="trophy" size={20} color="#F59E0B" />
             </View>
             <Text style={styles.statValue}>12</Text>
             <Text style={styles.statLabel}>Succès débloqués</Text>
@@ -109,7 +110,7 @@ export function StatsScreen() {
             {skills.map((skill) => (
               <View key={skill.id} style={styles.skillRow}>
                 <View style={styles.skillInfo}>
-                  <Text style={styles.skillIcon}>{getIconEmoji(skill.icon)}</Text>
+                  <Icon name={getIconName(skill.icon)} size={16} color="#F8FAFC" />
                   <Text style={styles.skillName}>{skill.name}</Text>
                 </View>
                 <View style={styles.skillProgress}>
@@ -125,14 +126,14 @@ export function StatsScreen() {
   );
 }
 
-const getIconEmoji = (iconName: string): string => {
-  const iconMap: Record<string, string> = {
-    music: '🎵',
-    camera: '📷',
-    dumbbell: '🏋️',
-    translate: '🌐',
+const getIconName = (iconName: string): IconName => {
+  const iconMap: Record<string, IconName> = {
+    music: 'music',
+    camera: 'camera',
+    dumbbell: 'fitness',
+    translate: 'language',
   };
-  return iconMap[iconName] || '⭐';
+  return iconMap[iconName] || 'star';
 };
 
 const styles = StyleSheet.create({

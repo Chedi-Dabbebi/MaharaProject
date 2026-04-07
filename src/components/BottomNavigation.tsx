@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { Icon, IconName } from './ui/Icon';
 
 type Screen = 'home' | 'plan' | 'stats' | 'profile';
 
@@ -8,11 +9,11 @@ interface BottomNavigationProps {
   onNavigate: (screen: Screen) => void;
 }
 
-const navItems: { id: Screen; label: string; icon: string }[] = [
-  { id: 'home', label: 'Home', icon: '🏠' },
-  { id: 'plan', label: 'Plan', icon: '📅' },
-  { id: 'stats', label: 'Stats', icon: '📊' },
-  { id: 'profile', label: 'Profile', icon: '👤' },
+const navItems: { id: Screen; label: string; icon: IconName }[] = [
+  { id: 'home', label: 'Home', icon: 'home' },
+  { id: 'plan', label: 'Plan', icon: 'calendar' },
+  { id: 'stats', label: 'Stats', icon: 'stats' },
+  { id: 'profile', label: 'Profile', icon: 'profile' },
 ];
 
 export function BottomNavigation({ activeScreen, onNavigate }: BottomNavigationProps) {
@@ -32,9 +33,7 @@ export function BottomNavigation({ activeScreen, onNavigate }: BottomNavigationP
               onPress={() => onNavigate(item.id)}
               activeOpacity={0.7}
             >
-              <Text style={[styles.icon, isActive && styles.iconActive]}>
-                {item.icon}
-              </Text>
+              <Icon name={item.icon} size={24} color={isActive ? '#E23E57' : '#94A3B8'} />
               <Text
                 style={[
                   styles.label,
@@ -77,13 +76,6 @@ const styles = StyleSheet.create({
   },
   navItemActive: {
     backgroundColor: 'rgba(226, 62, 87, 0.1)',
-  },
-  icon: {
-    fontSize: 24,
-    marginBottom: 4,
-  },
-  iconActive: {
-    opacity: 1,
   },
   label: {
     fontSize: 12,

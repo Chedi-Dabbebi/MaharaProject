@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { Icon } from './ui/Icon';
 import { XPBadge } from './ui/XPBadge';
 
 interface TaskItemProps {
@@ -31,7 +32,7 @@ export function TaskItem({ title, duration, xp, completed, onToggle }: TaskItemP
         ]}
       >
         {completed && (
-          <Text style={styles.checkmark}>✓</Text>
+          <Icon name="checkmark" size={14} color="#FFFFFF" />
         )}
       </View>
 
@@ -46,7 +47,7 @@ export function TaskItem({ title, duration, xp, completed, onToggle }: TaskItemP
           {title}
         </Text>
         <View style={styles.durationContainer}>
-          <Text style={styles.clockIcon}>⏱</Text>
+          <Icon name="time" size={12} color="#94A3B8" />
           <Text style={styles.duration}>{duration}</Text>
         </View>
       </View>

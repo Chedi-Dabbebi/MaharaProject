@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   StatusBar,
 } from 'react-native';
+import { Icon } from '../components/ui/Icon';
 import { LevelBadge } from '../components/ui/LevelBadge';
 import { skills } from '../data/skills';
 
@@ -32,7 +33,7 @@ export function ProfileScreen() {
         <View style={styles.header}>
           <Text style={styles.title}>Profil</Text>
           <TouchableOpacity style={styles.settingsButton}>
-            <Text style={styles.settingsIcon}>⚙️</Text>
+            <Icon name="settings" size={24} color="#94A3B8" />
           </TouchableOpacity>
         </View>
 
@@ -81,7 +82,7 @@ export function ProfileScreen() {
         {/* Achievements */}
         <View style={styles.card}>
           <View style={styles.cardHeader}>
-            <Text style={styles.cardIcon}>🏆</Text>
+            <Icon name="trophy" size={20} color="#F8FAFC" />
             <Text style={styles.cardTitle}>Succès</Text>
           </View>
 
@@ -112,9 +113,11 @@ export function ProfileScreen() {
                     }
                   ]}
                 >
-                  <Text style={{ fontSize: 20 }}>
-                    {achievement.earned ? '🏅' : '🔒'}
-                  </Text>
+                  {achievement.earned ? (
+                    <Icon name="trophy" size={20} color={achievement.color} />
+                  ) : (
+                    <Icon name="lock" size={20} color="#64748B" />
+                  )}
                 </View>
                 <Text style={styles.achievementName} numberOfLines={2}>
                   {achievement.name}

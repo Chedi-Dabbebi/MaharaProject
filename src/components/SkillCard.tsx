@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { Icon, IconName } from './ui/Icon';
 import { ProgressBar } from './ui/ProgressBar';
 
 interface SkillCardProps {
@@ -26,15 +27,14 @@ function lightenColor(color: string, percent: number): string {
   }
 }
 
-// Icon mapping using emoji for simplicity - can be replaced with react-native-vector-icons
-const getIconEmoji = (iconName: string): string => {
-  const iconMap: Record<string, string> = {
-    music: '🎵',
-    camera: '📷',
-    dumbbell: '🏋️',
-    translate: '🌐',
+const getIconName = (iconName: string): IconName => {
+  const iconMap: Record<string, IconName> = {
+    music: 'music',
+    camera: 'camera',
+    dumbbell: 'fitness',
+    translate: 'language',
   };
-  return iconMap[iconName] || '⭐';
+  return iconMap[iconName] || 'star';
 };
 
 export function SkillCard({ id, name, icon, color, progress, level, onPress }: SkillCardProps) {
@@ -59,7 +59,7 @@ export function SkillCard({ id, name, icon, color, progress, level, onPress }: S
           }
         ]}
       >
-        <Text style={styles.iconEmoji}>{getIconEmoji(icon)}</Text>
+        <Icon name={getIconName(icon)} size={32} color="#FFFFFF" />
       </View>
 
       {/* Content */}
@@ -88,6 +88,7 @@ export function SkillCard({ id, name, icon, color, progress, level, onPress }: S
 
 const styles = StyleSheet.create({
   container: {
+    width: '48%',
     borderRadius: 24,
     padding: 20,
     borderWidth: 1,
@@ -108,9 +109,6 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.25,
     shadowRadius: 24,
-  },
-  iconEmoji: {
-    fontSize: 28,
   },
   content: {
     marginBottom: 16,

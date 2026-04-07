@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+    <!-- Centered star/sparkle icon representing growth and skills -->
+    <group
+        android:translateX="27"
+        android:translateY="27"
+        android:scaleX="1.5"
+        android:scaleY="1.5">
+
+        <!-- Main star shape -->
+        <path
+            android:fillColor="#E23E57"
+            android:pathData="M27,4L31.5,17.5L46,17.5L34.5,26.5L39,40L27,31.5L15,40L19.5,26.5L8,17.5L22.5,17.5L27,4Z"/>
+
+        <!-- Inner accent -->
+        <path
+            android:fillColor="#F8FAFC"
+            android:pathData="M27,12L29.5,19L37,19L31,23.5L33.5,30.5L27,26L20.5,30.5L23,23.5L17,19L24.5,19L27,12Z"/>
+    </group>
+</vector>
