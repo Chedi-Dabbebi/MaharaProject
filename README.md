@@ -1,4 +1,4 @@
-Application Mobile de Développement de Compétences
+Mahara, Application Mobile de Développement de Compétences
 
 
 1. Introduction

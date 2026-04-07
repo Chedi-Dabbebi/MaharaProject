@@ -9,9 +9,16 @@ import {
 } from 'react-native';
 import { Icon } from '../components/ui/Icon';
 import { LevelBadge } from '../components/ui/LevelBadge';
+import { useTheme } from '../context/ThemeContext';
 import { skills } from '../data/skills';
 
-export function ProfileScreen() {
+interface ProfileScreenProps {
+  onNavigateToSettings: () => void;
+}
+
+export function ProfileScreen({ onNavigateToSettings }: ProfileScreenProps) {
+  const { colors, theme } = useTheme();
+  const isDark = theme === 'dark';
   const totalXP = skills.reduce((sum, skill) => sum + skill.xp, 0);
   const totalLevel = skills.reduce((sum, skill) => sum + skill.level, 0);
 
@@ -25,20 +32,20 @@ export function ProfileScreen() {
   ];
 
   return (
-    <View style={styles.container}>
-      <StatusBar barStyle="light-content" />
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
+      <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} />
 
       <ScrollView showsVerticalScrollIndicator={false}>
         {/* Header with Settings */}
         <View style={styles.header}>
-          <Text style={styles.title}>Profil</Text>
-          <TouchableOpacity style={styles.settingsButton}>
-            <Icon name="settings" size={24} color="#94A3B8" />
+          <Text style={[styles.title, { color: colors.textPrimary }]}>Profil</Text>
+          <TouchableOpacity style={[styles.settingsButton, { backgroundColor: colors.cardBackground }]} onPress={onNavigateToSettings}>
+            <Icon name="settings" size={24} color={colors.iconDefault} />
           </TouchableOpacity>
         </View>
 
         {/* Profile Card */}
-        <View style={styles.profileCard}>
+        <View style={[styles.profileCard, { backgroundColor: colors.cardBackground, borderColor: colors.cardBorder }]}>
           <View style={styles.profileHeader}>
             <View
               style={[
@@ -52,8 +59,8 @@ export function ProfileScreen() {
             </View>
 
             <View style={styles.profileInfo}>
-              <Text style={styles.profileName}>Jean Dupont</Text>
-              <Text style={styles.profileEmail}>jean.dupont@email.com</Text>
+              <Text style={[styles.profileName, { color: colors.textPrimary }]}>Jean Dupont</Text>
+              <Text style={[styles.profileEmail, { color: colors.textSecondary }]}>jean.dupont@email.com</Text>
             </View>
 
             <LevelBadge level={totalLevel} size="lg" />
@@ -61,29 +68,29 @@ export function ProfileScreen() {
 
           <View style={styles.statsRow}>
             <View style={styles.statItem}>
-              <Text style={styles.statValue}>{totalXP}</Text>
-              <Text style={styles.statLabel}>Total XP</Text>
+              <Text style={[styles.statValue, { color: colors.textPrimary }]}>{totalXP}</Text>
+              <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Total XP</Text>
             </View>
-            <View style={styles.divider} />
+            <View style={[styles.divider, { backgroundColor: colors.divider}]} />
             <View style={styles.statItem}>
-              <Text style={styles.statValue}>{skills.length}</Text>
-              <Text style={styles.statLabel}>Compétences</Text>
+              <Text style={[styles.statValue, { color: colors.textPrimary }]}>{skills.length}</Text>
+              <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Compétences</Text>
             </View>
-            <View style={styles.divider} />
+            <View style={[styles.divider, { backgroundColor: colors.divider}]} />
             <View style={styles.statItem}>
-              <Text style={styles.statValue}>
+              <Text style={[styles.statValue, { color: colors.textPrimary }]}>
                 {achievements.filter((a) => a.earned).length}
               </Text>
-              <Text style={styles.statLabel}>Succès</Text>
+              <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Succès</Text>
             </View>
           </View>
         </View>
 
         {/* Achievements */}
-        <View style={styles.card}>
+        <View style={[styles.card, { backgroundColor: colors.cardBackground, borderColor: colors.cardBorder }]}>
           <View style={styles.cardHeader}>
-            <Icon name="trophy" size={20} color="#F8FAFC" />
-            <Text style={styles.cardTitle}>Succès</Text>
+            <Icon name="trophy" size={20} color={isDark ? '#F8FAFC' : colors.textPrimary} />
+            <Text style={[styles.cardTitle, { color: colors.textPrimary }]}>Succès</Text>
           </View>
 
           <View style={styles.achievementsGrid}>
@@ -95,10 +102,10 @@ export function ProfileScreen() {
                   {
                     backgroundColor: achievement.earned
                       ? 'rgba(139, 92, 246, 0.1)'
-                      : 'rgba(255, 255, 255, 0.02)',
+                      : isDark ? 'rgba(255, 255, 255, 0.02)' : 'rgba(0, 0, 0, 0.02)',
                     borderColor: achievement.earned
                       ? 'rgba(139, 92, 246, 0.3)'
-                      : 'rgba(255, 255, 255, 0.05)',
+                      : colors.cardBorder,
                     opacity: achievement.earned ? 1 : 0.4,
                   }
                 ]}
@@ -109,17 +116,17 @@ export function ProfileScreen() {
                     {
                       backgroundColor: achievement.earned
                         ? `${achievement.color}30`
-                        : 'rgba(255, 255, 255, 0.05)',
+                        : isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)',
                     }
                   ]}
                 >
                   {achievement.earned ? (
                     <Icon name="trophy" size={20} color={achievement.color} />
                   ) : (
-                    <Icon name="lock" size={20} color="#64748B" />
+                    <Icon name="lock" size={20} color={isDark ? '#64748B' : '#94A3B8'} />
                   )}
                 </View>
-                <Text style={styles.achievementName} numberOfLines={2}>
+                <Text style={[styles.achievementName, { color: colors.textPrimary }]} numberOfLines={2}>
                   {achievement.name}
                 </Text>
               </View>
@@ -127,33 +134,26 @@ export function ProfileScreen() {
           </View>
         </View>
 
-        {/* Settings Options */}
-        <View style={styles.settingsCard}>
-          <TouchableOpacity style={styles.settingsItem}>
-            <Text style={styles.settingsItemText}>Paramètres du compte</Text>
-            <Text style={styles.chevron}>›</Text>
+        {/* Quick Settings */}
+        <View style={[styles.settingsCard, { backgroundColor: colors.cardBackground, borderColor: colors.cardBorder }]}>
+          <TouchableOpacity style={styles.settingsItem} onPress={onNavigateToSettings}>
+            <Text style={[styles.settingsItemText, { color: colors.textPrimary }]}>Paramètres du compte</Text>
+            <Text style={[styles.chevron, { color: colors.textTertiary }]}>›</Text>
           </TouchableOpacity>
 
-          <View style={styles.dividerHorizontal} />
+          <View style={[styles.dividerHorizontal, { backgroundColor: colors.divider}]} />
 
-          <TouchableOpacity style={styles.settingsItem}>
-            <Text style={styles.settingsItemText}>Notifications</Text>
-            <Text style={styles.chevron}>›</Text>
+          <TouchableOpacity style={styles.settingsItem} onPress={onNavigateToSettings}>
+            <Text style={[styles.settingsItemText, { color: colors.textPrimary }]}>Notifications</Text>
+            <Text style={[styles.chevron, { color: colors.textTertiary }]}>›</Text>
           </TouchableOpacity>
 
-          <View style={styles.dividerHorizontal} />
+          <View style={[styles.dividerHorizontal, { backgroundColor: colors.divider}]} />
 
-          <View style={styles.settingsItem}>
-            <Text style={styles.settingsItemText}>Mode sombre</Text>
-            <View
-              style={[
-                styles.toggle,
-                { backgroundColor: '#E23E57' }
-              ]}
-            >
-              <View style={styles.toggleKnob} />
-            </View>
-          </View>
+          <TouchableOpacity style={styles.settingsItem} onPress={onNavigateToSettings}>
+            <Text style={[styles.settingsItemText, { color: colors.textPrimary }]}>Mode sombre</Text>
+            <Text style={[styles.chevron, { color: colors.textTertiary }]}>›</Text>
+          </TouchableOpacity>
         </View>
       </ScrollView>
     </View>
@@ -163,7 +163,6 @@ export function ProfileScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#311D3F',
     paddingBottom: 100,
   },
   header: {
@@ -177,23 +176,16 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: '#F8FAFC',
   },
   settingsButton: {
     padding: 8,
     borderRadius: 16,
-    backgroundColor: 'rgba(255, 255, 255, 0.05)',
-  },
-  settingsIcon: {
-    fontSize: 24,
   },
   profileCard: {
     marginHorizontal: 20,
     borderRadius: 16,
     padding: 24,
-    backgroundColor: 'rgba(255, 255, 255, 0.05)',
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.1)',
   },
   profileHeader: {
     flexDirection: 'row',
@@ -220,21 +212,10 @@ const styles = StyleSheet.create({
   profileInfo: {
     flex: 1,
   },
-  profileName: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#F8FAFC',
-    marginBottom: 4,
-  },
-  profileEmail: {
-    fontSize: 14,
-    color: '#94A3B8',
-  },
   statsRow: {
     flexDirection: 'row',
     paddingTop: 20,
     borderTopWidth: 1,
-    borderTopColor: 'rgba(255, 255, 255, 0.1)',
   },
   statItem: {
     flex: 1,
@@ -242,16 +223,13 @@ const styles = StyleSheet.create({
   },
   divider: {
     width: 1,
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
   },
   statValue: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: '#F8FAFC',
   },
   statLabel: {
     fontSize: 12,
-    color: '#94A3B8',
     fontWeight: '600',
     marginTop: 4,
   },
@@ -260,9 +238,7 @@ const styles = StyleSheet.create({
     marginTop: 16,
     borderRadius: 16,
     padding: 20,
-    backgroundColor: 'rgba(255, 255, 255, 0.05)',
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.1)',
   },
   cardHeader: {
     flexDirection: 'row',
@@ -270,13 +246,9 @@ const styles = StyleSheet.create({
     gap: 8,
     marginBottom: 20,
   },
-  cardIcon: {
-    fontSize: 20,
-  },
   cardTitle: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#F8FAFC',
   },
   achievementsGrid: {
     flexDirection: 'row',
@@ -302,7 +274,6 @@ const styles = StyleSheet.create({
   },
   achievementName: {
     fontSize: 10,
-    color: '#F8FAFC',
     fontWeight: '600',
     textAlign: 'center',
   },
@@ -311,9 +282,7 @@ const styles = StyleSheet.create({
     marginTop: 16,
     borderRadius: 16,
     overflow: 'hidden',
-    backgroundColor: 'rgba(255, 255, 255, 0.05)',
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.1)',
   },
   settingsItem: {
     flexDirection: 'row',
@@ -325,29 +294,12 @@ const styles = StyleSheet.create({
   settingsItemText: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#F8FAFC',
   },
   chevron: {
     fontSize: 24,
-    color: '#94A3B8',
   },
   dividerHorizontal: {
     height: 1,
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
     marginHorizontal: 20,
-  },
-  toggle: {
-    width: 48,
-    height: 28,
-    borderRadius: 14,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  toggleKnob: {
-    width: 20,
-    height: 20,
-    borderRadius: 10,
-    backgroundColor: '#ffffff',
-    transform: [{ translateX: 12 }],
   },
 });

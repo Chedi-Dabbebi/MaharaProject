@@ -1,23 +1,26 @@
 import React, { useEffect } from 'react';
 import { View, StyleSheet, ActivityIndicator, Text } from 'react-native';
+import { useTheme } from '../context/ThemeContext';
 
 interface LoadingScreenProps {
   onFinish: () => void;
 }
 
 export function LoadingScreen({ onFinish }: LoadingScreenProps) {
+  const { colors } = useTheme();
+
   useEffect(() => {
     const timer = setTimeout(() => {
       onFinish();
-    }, 2000); // 2 second simulated loading
+    }, 2000);
 
     return () => clearTimeout(timer);
   }, [onFinish]);
 
   return (
-    <View style={styles.container}>
-      <ActivityIndicator size="large" color="#E23E57" />
-      <Text style={styles.text}>Chargement...</Text>
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
+      <ActivityIndicator size="large" color={colors.buttonPrimary} />
+      <Text style={[styles.text, { color: colors.textPrimary }]}>Chargement...</Text>
     </View>
   );
 }
@@ -25,14 +28,12 @@ export function LoadingScreen({ onFinish }: LoadingScreenProps) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#311D3F',
     justifyContent: 'center',
     alignItems: 'center',
   },
   text: {
     marginTop: 20,
     fontSize: 18,
-    color: '#F8FAFC',
     fontWeight: '500',
   },
 });

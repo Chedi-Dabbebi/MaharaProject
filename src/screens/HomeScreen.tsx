@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet, FlatList, StatusBar } from 'react-native';
 import { SkillCard } from '../components/SkillCard';
+import { useTheme } from '../context/ThemeContext';
 import { skills } from '../data/skills';
 
 interface HomeScreenProps {
@@ -8,13 +9,16 @@ interface HomeScreenProps {
 }
 
 export function HomeScreen({ onSkillPress }: HomeScreenProps) {
+  const { colors, theme } = useTheme();
+  const isDark = theme === 'dark';
+
   return (
-    <View style={styles.container}>
-      <StatusBar barStyle="light-content" />
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
+      <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} />
 
       <View style={styles.headerContainer}>
-        <Text style={styles.header}>Bonjour 👋</Text>
-        <Text style={styles.subHeader}>
+        <Text style={[styles.header, { color: colors.textPrimary }]}>Bonjour 👋</Text>
+        <Text style={[styles.subHeader, { color: colors.textSecondary }]}>
           Que voulez-vous pratiquer aujourd'hui ?
         </Text>
       </View>
@@ -44,7 +48,6 @@ export function HomeScreen({ onSkillPress }: HomeScreenProps) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#311D3F',
     paddingBottom: 100,
   },
   headerContainer: {
@@ -55,12 +58,9 @@ const styles = StyleSheet.create({
   header: {
     fontSize: 32,
     fontWeight: 'bold',
-    color: '#F8FAFC',
-    marginBottom: 12,
   },
   subHeader: {
     fontSize: 16,
-    color: '#94A3B8',
   },
   listContent: {
     paddingHorizontal: 20,

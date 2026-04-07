@@ -1,18 +1,21 @@
 import React, { useState } from 'react';
 import { StyleSheet, View, StatusBar } from 'react-native';
+import { ThemeProvider, useTheme } from './src/context/ThemeContext';
 import { HomeScreen } from './src/screens/HomeScreen';
 import { SkillDetailScreen } from './src/screens/SkillDetailScreen';
 import { PlanScreen } from './src/screens/PlanScreen';
 import { StatsScreen } from './src/screens/StatsScreen';
 import { ProfileScreen } from './src/screens/ProfileScreen';
+import { SettingsScreen } from './src/screens/SettingsScreen';
 import { LoadingScreen } from './src/screens/LoadingScreen';
 import { LoginScreen } from './src/screens/LoginScreen';
 import { BottomNavigation } from './src/components/BottomNavigation';
 import { skills } from './src/data/skills';
 
-type Screen = 'loading' | 'login' | 'home' | 'skillDetail' | 'plan' | 'stats' | 'profile';
+type Screen = 'loading' | 'login' | 'home' | 'skillDetail' | 'plan' | 'stats' | 'profile' | 'settings';
 
-const App = () => {
+function AppContent() {
+  const { theme, colors } = useTheme();
   const [currentScreen, setCurrentScreen] = useState<Screen>('loading');
   const [selectedSkillId, setSelectedSkillId] = useState<string | null>(null);
 
@@ -51,20 +54,30 @@ const App = () => {
       case 'stats':
         return <StatsScreen />;
       case 'profile':
-        return <ProfileScreen />;
+        return <ProfileScreen onNavigateToSettings={() => setCurrentScreen('settings')} />;
+      case 'settings':
+        return <SettingsScreen onBack={() => setCurrentScreen('profile')} />;
       default:
         return <HomeScreen onSkillPress={handleSkillPress} />;
     }
   };
 
   return (
-    <View style={styles.container}>
-      <StatusBar barStyle="light-content" />
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
+      <StatusBar barStyle={theme === 'dark' ? 'light-content' : 'dark-content'} />
       <View style={styles.screenContainer}>{renderScreen()}</View>
       {currentScreen !== 'loading' && currentScreen !== 'login' && (
         <BottomNavigation activeScreen={currentScreen} onNavigate={handleNavigate} />
       )}
     </View>
+  );
+}
+
+const App = () => {
+  return (
+    <ThemeProvider initialTheme="dark">
+      <AppContent />
+    </ThemeProvider>
   );
 };
 

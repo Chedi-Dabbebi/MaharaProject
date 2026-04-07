@@ -1,8 +1,9 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { Icon, IconName } from './ui/Icon';
+import { useTheme } from '../context/ThemeContext';
 
-type Screen = 'loading' | 'login' | 'home' | 'skillDetail' | 'plan' | 'stats' | 'profile';
+type Screen = 'loading' | 'login' | 'home' | 'skillDetail' | 'plan' | 'stats' | 'profile' | 'settings';
 
 interface BottomNavigationProps {
   activeScreen: Screen;
@@ -17,8 +18,10 @@ const navItems: { id: Screen; label: string; icon: IconName }[] = [
 ];
 
 export function BottomNavigation({ activeScreen, onNavigate }: BottomNavigationProps) {
+  const { colors } = useTheme();
+
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: colors.navBackground, borderColor: colors.navBorder }]}>
       <View style={styles.content}>
         {navItems.map((item) => {
           const isActive = activeScreen === item.id;
@@ -28,16 +31,16 @@ export function BottomNavigation({ activeScreen, onNavigate }: BottomNavigationP
               key={item.id}
               style={[
                 styles.navItem,
-                isActive && styles.navItemActive,
+                isActive && [styles.navItemActive, { backgroundColor: colors.navActiveBg }],
               ]}
               onPress={() => onNavigate(item.id)}
               activeOpacity={0.7}
             >
-              <Icon name={item.icon} size={24} color={isActive ? '#E23E57' : '#94A3B8'} />
+              <Icon name={item.icon} size={24} color={isActive ? colors.iconActive : colors.iconDefault} />
               <Text
                 style={[
                   styles.label,
-                  isActive && styles.labelActive,
+                  { color: isActive ? colors.iconActive : colors.iconDefault },
                 ]}
               >
                 {item.label}
@@ -56,9 +59,7 @@ const styles = StyleSheet.create({
     bottom: 0,
     left: 0,
     right: 0,
-    backgroundColor: 'rgba(255, 255, 255, 0.05)',
     borderTopWidth: 1,
-    borderTopColor: 'rgba(255, 255, 255, 0.1)',
     paddingBottom: 20,
   },
   content: {
@@ -75,14 +76,9 @@ const styles = StyleSheet.create({
     borderRadius: 16,
   },
   navItemActive: {
-    backgroundColor: 'rgba(226, 62, 87, 0.1)',
   },
   label: {
     fontSize: 12,
     fontWeight: '600',
-    color: '#94A3B8',
-  },
-  labelActive: {
-    color: '#E23E57',
   },
 });

@@ -21,7 +21,15 @@ export type IconName =
   | 'star'
   | 'sparkle'
   | 'arrowForward'
-  | 'refresh';
+  | 'refresh'
+  | 'arrow-left'
+  | 'moon'
+  | 'bell'
+  | 'volume-up'
+  | 'user'
+  | 'help'
+  | 'info'
+  | 'logout';
 
 interface IconProps {
   name: IconName;
@@ -50,6 +58,14 @@ const iconMap: Record<IconName, string> = {
   sparkle: 'sparkles-outline',
   arrowForward: 'arrow-forward-outline',
   refresh: 'refresh-outline',
+  'arrow-left': 'arrow-back-outline',
+  moon: 'moon-outline',
+  bell: 'notifications-outline',
+  'volume-up': 'volume-high-outline',
+  user: 'person-outline',
+  help: 'help-circle-outline',
+  info: 'information-circle-outline',
+  logout: 'log-out-outline',
 };
 
 export function Icon({ name, size = 24, color = '#94A3B8', style }: IconProps) {

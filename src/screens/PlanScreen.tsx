@@ -9,11 +9,14 @@ import {
 } from 'react-native';
 import { Icon, IconName } from '../components/ui/Icon';
 import { PrimaryButton } from '../components/ui/PrimaryButton';
+import { useTheme } from '../context/ThemeContext';
 import { skills } from '../data/skills';
 
 type Difficulty = 'facile' | 'moyen' | 'difficile';
 
 export function PlanScreen() {
+  const { colors, theme } = useTheme();
+  const isDark = theme === 'dark';
   const [selectedSkill, setSelectedSkill] = useState(skills[0]);
   const [difficulty, setDifficulty] = useState<Difficulty>('moyen');
 
@@ -21,20 +24,20 @@ export function PlanScreen() {
   const sessionsPerWeek = difficulty === 'facile' ? 3 : difficulty === 'moyen' ? 5 : 7;
 
   return (
-    <View style={styles.container}>
-      <StatusBar barStyle="light-content" />
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
+      <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} />
 
       <ScrollView showsVerticalScrollIndicator={false}>
         <View style={styles.header}>
-          <Text style={styles.title}>Générateur de Plan</Text>
-          <Text style={styles.subtitle}>
+          <Text style={[styles.title, { color: colors.textPrimary }]}>Générateur de Plan</Text>
+          <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
             Créez un plan d'entraînement personnalisé
           </Text>
         </View>
 
         {/* Skill Selection */}
-        <View style={styles.card}>
-          <Text style={styles.cardLabel}>Compétence</Text>
+        <View style={[styles.card, { backgroundColor: colors.cardBackground, borderColor: colors.cardBorder }]}>
+          <Text style={[styles.cardLabel, { color: colors.textPrimary }]}>Compétence</Text>
           <View style={styles.skillGrid}>
             {skills.map((skill) => {
               const isSelected = selectedSkill.id === skill.id;
@@ -47,8 +50,8 @@ export function PlanScreen() {
                     {
                       backgroundColor: isSelected
                         ? 'rgba(226, 62, 87, 0.15)'
-                        : 'rgba(255, 255, 255, 0.03)',
-                      borderColor: isSelected ? '#E23E57' : 'rgba(255, 255, 255, 0.1)',
+                        : isDark ? 'rgba(255, 255, 255, 0.03)' : 'rgba(0, 0, 0, 0.02)',
+                      borderColor: isSelected ? '#E23E57' : colors.cardBorder,
                     }
                   ]}
                 >
@@ -58,9 +61,9 @@ export function PlanScreen() {
                       { backgroundColor: `${skill.color}20` }
                     ]}
                   >
-                    <Icon name={getIconName(skill.icon)} size={16} color="#F8FAFC" />
+                    <Icon name={getIconName(skill.icon)} size={16} color={isDark ? '#F8FAFC' : colors.textPrimary} />
                   </View>
-                  <Text style={styles.skillName}>{skill.name}</Text>
+                  <Text style={[styles.skillName, { color: colors.textPrimary }]}>{skill.name}</Text>
                 </TouchableOpacity>
               );
             })}
@@ -68,8 +71,8 @@ export function PlanScreen() {
         </View>
 
         {/* Difficulty Selection */}
-        <View style={styles.card}>
-          <Text style={styles.cardLabel}>Difficulté</Text>
+        <View style={[styles.card, { backgroundColor: colors.cardBackground, borderColor: colors.cardBorder }]}>
+          <Text style={[styles.cardLabel, { color: colors.textPrimary }]}>Difficulté</Text>
           <View style={styles.difficultyContainer}>
             {(['facile', 'moyen', 'difficile'] as Difficulty[]).map((level) => (
               <TouchableOpacity
@@ -81,14 +84,14 @@ export function PlanScreen() {
                     backgroundColor:
                       difficulty === level
                         ? '#E23E57'
-                        : 'rgba(255, 255, 255, 0.05)',
+                        : isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)',
                   }
                 ]}
               >
                 <Text
                   style={[
                     styles.difficultyText,
-                    { color: difficulty === level ? '#ffffff' : '#94A3B8' }
+                    { color: difficulty === level ? '#ffffff' : colors.textSecondary }
                   ]}
                 >
                   {level.charAt(0).toUpperCase() + level.slice(1)}
@@ -99,37 +102,37 @@ export function PlanScreen() {
         </View>
 
         {/* Generated Plan Summary */}
-        <View style={styles.card}>
+        <View style={[styles.card, { backgroundColor: colors.cardBackground, borderColor: colors.cardBorder }]}>
           <View style={styles.planHeader}>
-            <Icon name="sparkle" size={20} color="#F8FAFC" />
-            <Text style={styles.planTitle}>Plan Généré</Text>
+            <Icon name="sparkle" size={20} color={isDark ? '#F8FAFC' : colors.textPrimary} />
+            <Text style={[styles.planTitle, { color: colors.textPrimary }]}>Plan Généré</Text>
           </View>
 
           <View style={styles.planContent}>
-            <View style={styles.planItem}>
+            <View style={[styles.planItem, { backgroundColor: 'rgba(59, 130, 246, 0.1)', borderColor: 'rgba(59, 130, 246, 0.2)' }]}>
               <View style={[styles.planIconBox, { backgroundColor: 'rgba(59, 130, 246, 0.2)' }]}>
                 <Icon name="target" size={20} color="#3B82F6" />
               </View>
               <View style={styles.planTextContainer}>
-                <Text style={styles.planLabel}>Séances par semaine</Text>
-                <Text style={styles.planValue}>{sessionsPerWeek} séances</Text>
+                <Text style={[styles.planLabel, { color: colors.textSecondary }]}>Séances par semaine</Text>
+                <Text style={[styles.planValue, { color: colors.textPrimary }]}>{sessionsPerWeek} séances</Text>
               </View>
             </View>
 
-            <View style={styles.planItem}>
+            <View style={[styles.planItem, { backgroundColor: 'rgba(139, 92, 246, 0.1)', borderColor: 'rgba(139, 92, 246, 0.2)' }]}>
               <View style={[styles.planIconBox, { backgroundColor: 'rgba(139, 92, 246, 0.2)' }]}>
                 <Icon name="time" size={20} color="#8B5CF6" />
               </View>
               <View style={styles.planTextContainer}>
-                <Text style={styles.planLabel}>Temps hebdomadaire estimé</Text>
-                <Text style={styles.planValue}>{weeklyTime}</Text>
+                <Text style={[styles.planLabel, { color: colors.textSecondary }]}>Temps hebdomadaire estimé</Text>
+                <Text style={[styles.planValue, { color: colors.textPrimary }]}>{weeklyTime}</Text>
               </View>
             </View>
 
-            <View style={styles.planDescription}>
-              <Text style={styles.descriptionText}>
+            <View style={[styles.planDescription, { borderTopColor: colors.divider }]}>
+              <Text style={[styles.descriptionText, { color: colors.textSecondary }]}>
                 Votre plan personnalisé pour{' '}
-                <Text style={styles.highlight}>{selectedSkill.name}</Text> inclut des
+                <Text style={[styles.highlight, { color: colors.textPrimary }]}>{selectedSkill.name}</Text> inclut des
                 exercices progressifs adaptés à votre niveau ({selectedSkill.level}) et à
                 la difficulté sélectionnée.
               </Text>
@@ -140,10 +143,10 @@ export function PlanScreen() {
         {/* Action Buttons */}
         <View style={styles.actionContainer}>
           <TouchableOpacity
-            style={styles.regenerateButton}
+            style={[styles.regenerateButton, { backgroundColor: 'rgba(139, 92, 246, 0.1)', borderColor: '#8B5CF6' }]}
             onPress={() => console.log('Régénérer')}
           >
-            <Text style={styles.regenerateText}>Régénérer</Text>
+            <Text style={[styles.regenerateText, { color: '#8B5CF6' }]}>Régénérer</Text>
           </TouchableOpacity>
           <View style={styles.validateButtonContainer}>
             <PrimaryButton fullWidth onPress={() => console.log('Valider')}>
@@ -169,7 +172,6 @@ const getIconName = (iconName: string): IconName => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#311D3F',
     paddingBottom: 100,
   },
   header: {
@@ -180,26 +182,20 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: '#F8FAFC',
-    marginBottom: 8,
   },
   subtitle: {
     fontSize: 14,
-    color: '#94A3B8',
   },
   card: {
     marginHorizontal: 20,
     marginTop: 16,
     borderRadius: 16,
     padding: 20,
-    backgroundColor: 'rgba(255, 255, 255, 0.05)',
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.1)',
   },
   cardLabel: {
     fontSize: 14,
     fontWeight: 'bold',
-    color: '#F8FAFC',
     marginBottom: 16,
   },
   skillGrid: {
@@ -225,7 +221,6 @@ const styles = StyleSheet.create({
   skillName: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#F8FAFC',
   },
   difficultyContainer: {
     flexDirection: 'row',
@@ -247,13 +242,9 @@ const styles = StyleSheet.create({
     gap: 8,
     marginBottom: 20,
   },
-  planIcon: {
-    fontSize: 20,
-  },
   planTitle: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#F8FAFC',
   },
   planContent: {
     gap: 16,
@@ -263,9 +254,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: 16,
     borderRadius: 16,
-    backgroundColor: 'rgba(59, 130, 246, 0.1)',
     borderWidth: 1,
-    borderColor: 'rgba(59, 130, 246, 0.2)',
   },
   planIconBox: {
     width: 48,
@@ -274,35 +263,27 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  planIconEmoji: {
-    fontSize: 20,
-  },
   planTextContainer: {
     flex: 1,
     marginLeft: 12,
   },
   planLabel: {
     fontSize: 12,
-    color: '#94A3B8',
     fontWeight: '600',
   },
   planValue: {
     fontSize: 14,
     fontWeight: 'bold',
-    color: '#F8FAFC',
   },
   planDescription: {
     paddingTop: 16,
     borderTopWidth: 1,
-    borderTopColor: 'rgba(255, 255, 255, 0.1)',
   },
   descriptionText: {
     fontSize: 14,
-    color: '#94A3B8',
     lineHeight: 20,
   },
   highlight: {
-    color: '#F8FAFC',
     fontWeight: '600',
   },
   actionContainer: {
@@ -317,13 +298,10 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: '#8B5CF6',
-    backgroundColor: 'rgba(139, 92, 246, 0.1)',
     alignItems: 'center',
     justifyContent: 'center',
   },
   regenerateText: {
-    color: '#8B5CF6',
     fontSize: 16,
     fontWeight: 'bold',
   },
