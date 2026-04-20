@@ -4,6 +4,7 @@
   "private": true,
   "scripts": {
     "android": "react-native run-android",
+    "api": "node server/index.js",
     "ios": "react-native run-ios",
     "lint": "eslint .",
     "start": "react-native start",
@@ -11,6 +12,8 @@
   },
   "dependencies": {
     "@react-native/new-app-screen": "0.84.0",
+    "@supabase/supabase-js": "^2.57.4",
+    "express": "^4.21.2",
     "react": "19.2.3",
     "react-native": "0.84.0",
     "react-native-safe-area-context": "^5.5.2",

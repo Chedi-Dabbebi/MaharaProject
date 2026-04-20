@@ -2,7 +2,7 @@ import React from 'react';
 import { View, Text, StyleSheet, FlatList, StatusBar } from 'react-native';
 import { SkillCard } from '../components/SkillCard';
 import { useTheme } from '../context/ThemeContext';
-import { skills } from '../data/skills';
+import { useAppState } from '../context/AppStateContext';
 
 interface HomeScreenProps {
   onSkillPress: (skillId: string) => void;
@@ -10,6 +10,7 @@ interface HomeScreenProps {
 
 export function HomeScreen({ onSkillPress }: HomeScreenProps) {
   const { colors, theme } = useTheme();
+  const { skills } = useAppState();
   const isDark = theme === 'dark';
 
   return (

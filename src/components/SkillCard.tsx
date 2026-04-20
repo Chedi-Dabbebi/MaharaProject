@@ -1,7 +1,8 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
-import { Icon, IconName } from './ui/Icon';
+import { Icon } from './ui/Icon';
 import { ProgressBar } from './ui/ProgressBar';
+import { getIconName } from '../utils/iconHelper';
 
 interface SkillCardProps {
   id: string;
@@ -26,16 +27,6 @@ function lightenColor(color: string, percent: number): string {
     return color;
   }
 }
-
-const getIconName = (iconName: string): IconName => {
-  const iconMap: Record<string, IconName> = {
-    music: 'music',
-    camera: 'camera',
-    dumbbell: 'fitness',
-    translate: 'language',
-  };
-  return iconMap[iconName] || 'star';
-};
 
 export function SkillCard({ id, name, icon, color, progress, level, onPress }: SkillCardProps) {
   const lightColor = lightenColor(color, 20);
@@ -97,6 +88,7 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.2,
     shadowRadius: 32,
+    elevation: 8,
   },
   iconWrapper: {
     width: 56,
@@ -109,6 +101,7 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.25,
     shadowRadius: 24,
+    elevation: 10,
   },
   content: {
     marginBottom: 16,

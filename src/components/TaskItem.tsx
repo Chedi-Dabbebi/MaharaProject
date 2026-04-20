@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { Icon } from './ui/Icon';
 import { XPBadge } from './ui/XPBadge';
@@ -81,11 +81,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     flexShrink: 0,
   },
-  checkmark: {
-    color: 'white',
-    fontSize: 14,
-    fontWeight: 'bold',
-  },
   content: {
     flex: 1,
   },
@@ -106,9 +101,6 @@ const styles = StyleSheet.create({
   },
   duration: {
     color: '#94A3B8',
-    fontSize: 12,
-  },
-  clockIcon: {
     fontSize: 12,
   },
 });

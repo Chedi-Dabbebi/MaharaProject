@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { StyleSheet, View, StatusBar } from 'react-native';
 import { ThemeProvider, useTheme } from './src/context/ThemeContext';
+import { AppStateProvider, useAppState } from './src/context/AppStateContext';
 import { HomeScreen } from './src/screens/HomeScreen';
 import { SkillDetailScreen } from './src/screens/SkillDetailScreen';
 import { PlanScreen } from './src/screens/PlanScreen';
@@ -10,14 +11,28 @@ import { SettingsScreen } from './src/screens/SettingsScreen';
 import { LoadingScreen } from './src/screens/LoadingScreen';
 import { LoginScreen } from './src/screens/LoginScreen';
 import { BottomNavigation } from './src/components/BottomNavigation';
-import { skills } from './src/data/skills';
 
 type Screen = 'loading' | 'login' | 'home' | 'skillDetail' | 'plan' | 'stats' | 'profile' | 'settings';
 
 function AppContent() {
   const { theme, colors } = useTheme();
+  const { appReady, isAuthenticated, getSkillById, logout } = useAppState();
   const [currentScreen, setCurrentScreen] = useState<Screen>('loading');
   const [selectedSkillId, setSelectedSkillId] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!appReady) {
+      setCurrentScreen('loading');
+      return;
+    }
+
+    if (!isAuthenticated) {
+      setCurrentScreen('login');
+      return;
+    }
+
+    setCurrentScreen((screen) => (screen === 'loading' || screen === 'login' ? 'home' : screen));
+  }, [appReady, isAuthenticated]);
 
   const handleSkillPress = (skillId: string) => {
     setSelectedSkillId(skillId);
@@ -33,12 +48,18 @@ function AppContent() {
     setSelectedSkillId(null);
   };
 
-  const selectedSkill = skills.find((s) => s.id === selectedSkillId);
+  const handleLogout = () => {
+    void logout();
+    setSelectedSkillId(null);
+    setCurrentScreen('login');
+  };
+
+  const selectedSkill = getSkillById(selectedSkillId);
 
   const renderScreen = () => {
     switch (currentScreen) {
       case 'loading':
-        return <LoadingScreen onFinish={() => handleNavigate('login')} />;
+        return <LoadingScreen />;
       case 'login':
         return <LoginScreen onLogin={() => handleNavigate('home')} />;
       case 'home':
@@ -56,7 +77,7 @@ function AppContent() {
       case 'profile':
         return <ProfileScreen onNavigateToSettings={() => setCurrentScreen('settings')} />;
       case 'settings':
-        return <SettingsScreen onBack={() => setCurrentScreen('profile')} />;
+        return <SettingsScreen onBack={() => setCurrentScreen('profile')} onLogout={handleLogout} />;
       default:
         return <HomeScreen onSkillPress={handleSkillPress} />;
     }
@@ -65,7 +86,7 @@ function AppContent() {
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       <StatusBar barStyle={theme === 'dark' ? 'light-content' : 'dark-content'} />
-      <View style={styles.screenContainer}>{renderScreen()}</View>
+      <View style={[styles.screenContainer, { backgroundColor: colors.background }]}>{renderScreen()}</View>
       {currentScreen !== 'loading' && currentScreen !== 'login' && (
         <BottomNavigation activeScreen={currentScreen} onNavigate={handleNavigate} />
       )}
@@ -76,7 +97,9 @@ function AppContent() {
 const App = () => {
   return (
     <ThemeProvider initialTheme="dark">
-      <AppContent />
+      <AppStateProvider>
+        <AppContent />
+      </AppStateProvider>
     </ThemeProvider>
   );
 };
@@ -84,7 +107,6 @@ const App = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#311D3F',
   },
   screenContainer: {
     flex: 1,

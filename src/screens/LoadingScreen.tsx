@@ -3,13 +3,17 @@ import { View, StyleSheet, ActivityIndicator, Text } from 'react-native';
 import { useTheme } from '../context/ThemeContext';
 
 interface LoadingScreenProps {
-  onFinish: () => void;
+  onFinish?: () => void;
 }
 
 export function LoadingScreen({ onFinish }: LoadingScreenProps) {
   const { colors } = useTheme();
 
   useEffect(() => {
+    if (!onFinish) {
+      return;
+    }
+
     const timer = setTimeout(() => {
       onFinish();
     }, 2000);

@@ -7,21 +7,58 @@ import {
   TouchableOpacity,
   StatusBar,
 } from 'react-native';
-import { Icon, IconName } from '../components/ui/Icon';
+import { Icon } from '../components/ui/Icon';
 import { PrimaryButton } from '../components/ui/PrimaryButton';
 import { useTheme } from '../context/ThemeContext';
-import { skills } from '../data/skills';
-
-type Difficulty = 'facile' | 'moyen' | 'difficile';
+import { getIconName } from '../utils/iconHelper';
+import { useAppState } from '../context/AppStateContext';
+import { Difficulty, GeneratedPlan } from '../logic/planGenerator';
+import { generatePlanWithAI } from '../services/aiPlanService';
 
 export function PlanScreen() {
   const { colors, theme } = useTheme();
+  const { skills, createPlan, saveDraftPlan, acceptPlan } = useAppState();
   const isDark = theme === 'dark';
-  const [selectedSkill, setSelectedSkill] = useState(skills[0]);
+  const [selectedSkillId, setSelectedSkillId] = useState<string | null>(skills[0]?.id ?? null);
   const [difficulty, setDifficulty] = useState<Difficulty>('moyen');
+  const [generatedPlan, setGeneratedPlan] = useState<GeneratedPlan | null>(null);
+  const [statusMessage, setStatusMessage] = useState('');
 
-  const weeklyTime = difficulty === 'facile' ? "2h30" : difficulty === 'moyen' ? '4h' : '6h';
-  const sessionsPerWeek = difficulty === 'facile' ? 3 : difficulty === 'moyen' ? 5 : 7;
+  const selectedSkill = skills.find((skill) => skill.id === selectedSkillId) ?? null;
+
+  if (!selectedSkill) {
+    return null;
+  }
+
+  const planToShow = generatedPlan ?? createPlan(selectedSkill.id, difficulty);
+  const weeklyTime = planToShow?.weeklyTime ?? '0 min';
+  const sessionsPerWeek = planToShow?.sessionsPerWeek ?? 0;
+  const plannedSessions = planToShow?.sessions ?? [];
+
+  const handleRegenerate = async () => {
+    const aiPlan = await generatePlanWithAI({
+      skill: selectedSkill,
+      difficulty,
+    });
+    const nextPlan = aiPlan ?? createPlan(selectedSkill.id, difficulty);
+    if (!nextPlan) {
+      setStatusMessage('Impossible de generer un plan pour cette competence.');
+      return;
+    }
+    setGeneratedPlan(nextPlan);
+    await saveDraftPlan(nextPlan, aiPlan ? 'ai' : 'fallback');
+    setStatusMessage(aiPlan ? 'Plan IA généré.' : 'Plan régénéré (fallback local).');
+  };
+
+  const handleValidate = () => {
+    const plan = generatedPlan ?? createPlan(selectedSkill.id, difficulty);
+    if (!plan) {
+      setStatusMessage('Aucun plan a valider.');
+      return;
+    }
+    acceptPlan(plan);
+    setStatusMessage('Plan valide et enregistre.');
+  };
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
@@ -44,7 +81,11 @@ export function PlanScreen() {
               return (
                 <TouchableOpacity
                   key={skill.id}
-                  onPress={() => setSelectedSkill(skill)}
+                  onPress={() => {
+                    setSelectedSkillId(skill.id);
+                    setGeneratedPlan(null);
+                    setStatusMessage('');
+                  }}
                   style={[
                     styles.skillButton,
                     {
@@ -77,7 +118,11 @@ export function PlanScreen() {
             {(['facile', 'moyen', 'difficile'] as Difficulty[]).map((level) => (
               <TouchableOpacity
                 key={level}
-                onPress={() => setDifficulty(level)}
+                onPress={() => {
+                  setDifficulty(level);
+                  setGeneratedPlan(null);
+                  setStatusMessage('');
+                }}
                 style={[
                   styles.difficultyButton,
                   {
@@ -137,6 +182,36 @@ export function PlanScreen() {
                 la difficulté sélectionnée.
               </Text>
             </View>
+
+            <View style={[styles.planDescription, { borderTopColor: colors.divider }]}>
+              <Text style={[styles.planLabel, { color: colors.textSecondary }]}>Séances planifiées</Text>
+              {plannedSessions.length > 0 ? (
+                plannedSessions.map((session, index) => (
+                  <View
+                    key={`${session.taskId}-${session.dayLabel}-${index}`}
+                    style={[
+                      styles.sessionRow,
+                      {
+                        backgroundColor: isDark ? 'rgba(255, 255, 255, 0.03)' : 'rgba(0, 0, 0, 0.03)',
+                        borderColor: colors.cardBorder,
+                      },
+                    ]}
+                  >
+                    <Text style={[styles.sessionDay, { color: colors.textSecondary }]}>{session.dayLabel}</Text>
+                    <View style={styles.sessionContent}>
+                      <Text style={[styles.sessionTitle, { color: colors.textPrimary }]}>{session.taskTitle}</Text>
+                      <Text style={[styles.sessionMeta, { color: colors.textSecondary }]}>
+                        {session.duration} • {session.xp} XP
+                      </Text>
+                    </View>
+                  </View>
+                ))
+              ) : (
+                <Text style={[styles.sessionMeta, { color: colors.textSecondary }]}>
+                  Génère un plan pour voir les tâches proposées.
+                </Text>
+              )}
+            </View>
           </View>
         </View>
 
@@ -144,30 +219,23 @@ export function PlanScreen() {
         <View style={styles.actionContainer}>
           <TouchableOpacity
             style={[styles.regenerateButton, { backgroundColor: 'rgba(139, 92, 246, 0.1)', borderColor: '#8B5CF6' }]}
-            onPress={() => console.log('Régénérer')}
+            onPress={handleRegenerate}
           >
             <Text style={[styles.regenerateText, { color: '#8B5CF6' }]}>Régénérer</Text>
           </TouchableOpacity>
           <View style={styles.validateButtonContainer}>
-            <PrimaryButton fullWidth onPress={() => console.log('Valider')}>
+            <PrimaryButton fullWidth onPress={handleValidate}>
               Valider
             </PrimaryButton>
           </View>
         </View>
+        {statusMessage ? (
+          <Text style={[styles.statusMessage, { color: colors.textSecondary }]}>{statusMessage}</Text>
+        ) : null}
       </ScrollView>
     </View>
   );
 }
-
-const getIconName = (iconName: string): IconName => {
-  const iconMap: Record<string, IconName> = {
-    music: 'music',
-    camera: 'camera',
-    dumbbell: 'fitness',
-    translate: 'language',
-  };
-  return iconMap[iconName] || 'star';
-};
 
 const styles = StyleSheet.create({
   container: {
@@ -307,5 +375,39 @@ const styles = StyleSheet.create({
   },
   validateButtonContainer: {
     flex: 1,
+  },
+  statusMessage: {
+    fontSize: 12,
+    fontWeight: '600',
+    marginHorizontal: 20,
+    marginTop: 4,
+    marginBottom: 32,
+    textAlign: 'center',
+  },
+  sessionRow: {
+    marginTop: 10,
+    borderRadius: 12,
+    borderWidth: 1,
+    padding: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  sessionDay: {
+    width: 34,
+    fontSize: 12,
+    fontWeight: '700',
+  },
+  sessionContent: {
+    flex: 1,
+  },
+  sessionTitle: {
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  sessionMeta: {
+    fontSize: 12,
+    marginTop: 2,
+    fontWeight: '500',
   },
 });

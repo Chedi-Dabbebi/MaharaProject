@@ -11,7 +11,9 @@ import { LevelBadge } from '../components/ui/LevelBadge';
 import { ProgressBar } from '../components/ui/ProgressBar';
 import { TaskItem } from '../components/TaskItem';
 import { PrimaryButton } from '../components/ui/PrimaryButton';
-import { Skill, Task } from '../data/skills';
+import { Skill } from '../data/skills';
+import { getIconEmoji } from '../utils/iconHelper';
+import { useAppState } from '../context/AppStateContext';
 
 interface SkillDetailScreenProps {
   skill: Skill;
@@ -19,14 +21,24 @@ interface SkillDetailScreenProps {
 }
 
 export function SkillDetailScreen({ skill, onBack }: SkillDetailScreenProps) {
-  const [tasks, setTasks] = useState<Task[]>(skill.tasks);
+  const {
+    toggleTaskCompletion,
+    activeSessions,
+    acceptedPlans,
+    startSession,
+    completeSession,
+  } = useAppState();
+  const [sessionMessage, setSessionMessage] = useState('');
+  const hasActiveSession = Boolean(activeSessions[skill.id]);
+  const plannedTaskOrder = acceptedPlans[skill.id]?.recommendedTaskIds ?? [];
+  const plannedTasks = plannedTaskOrder
+    .map((taskId) => skill.tasks.find((task) => task.id === taskId))
+    .filter((task): task is NonNullable<typeof task> => Boolean(task));
+  const tasksToDisplay = plannedTasks.length > 0 ? plannedTasks : skill.tasks;
 
-  const toggleTask = (taskId: string) => {
-    setTasks(
-      tasks.map((task) =>
-        task.id === taskId ? { ...task, completed: !task.completed } : task
-      )
-    );
+  const handleSessionPress = () => {
+    const result = hasActiveSession ? completeSession(skill.id) : startSession(skill.id);
+    setSessionMessage(result.message);
   };
 
   return (
@@ -83,14 +95,14 @@ export function SkillDetailScreen({ skill, onBack }: SkillDetailScreenProps) {
         <Text style={styles.sectionTitle}>Tâches de la semaine</Text>
 
         <View style={styles.tasksContainer}>
-          {tasks.map((task) => (
+          {tasksToDisplay.map((task) => (
             <TaskItem
               key={task.id}
               title={task.title}
               duration={task.duration}
               xp={task.xp}
               completed={task.completed}
-              onToggle={() => toggleTask(task.id)}
+              onToggle={() => toggleTaskCompletion(skill.id, task.id)}
             />
           ))}
         </View>
@@ -98,28 +110,18 @@ export function SkillDetailScreen({ skill, onBack }: SkillDetailScreenProps) {
 
       {/* Floating Action Button */}
       <View style={styles.fabContainer}>
-        <PrimaryButton onPress={() => console.log('Commencer la séance')}>
-          Commencer la séance
+        <PrimaryButton onPress={handleSessionPress}>
+          {hasActiveSession ? 'Terminer la séance' : 'Commencer la séance'}
         </PrimaryButton>
+        {sessionMessage ? <Text style={styles.sessionMessage}>{sessionMessage}</Text> : null}
       </View>
     </View>
   );
 }
 
-const getIconEmoji = (iconName: string): string => {
-  const iconMap: Record<string, string> = {
-    music: '🎵',
-    camera: '📷',
-    dumbbell: '🏋️',
-    translate: '🌐',
-  };
-  return iconMap[iconName] || '⭐';
-};
-
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#311D3F',
   },
   header: {
     paddingHorizontal: 20,
@@ -216,5 +218,12 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     paddingHorizontal: 20,
+  },
+  sessionMessage: {
+    marginTop: 10,
+    textAlign: 'center',
+    fontSize: 12,
+    color: '#94A3B8',
+    fontWeight: '600',
   },
 });

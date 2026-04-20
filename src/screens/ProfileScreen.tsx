@@ -10,7 +10,7 @@ import {
 import { Icon } from '../components/ui/Icon';
 import { LevelBadge } from '../components/ui/LevelBadge';
 import { useTheme } from '../context/ThemeContext';
-import { skills } from '../data/skills';
+import { useAppState } from '../context/AppStateContext';
 
 interface ProfileScreenProps {
   onNavigateToSettings: () => void;
@@ -18,18 +18,23 @@ interface ProfileScreenProps {
 
 export function ProfileScreen({ onNavigateToSettings }: ProfileScreenProps) {
   const { colors, theme } = useTheme();
+  const { user, skills, totalXP, totalLevel, totalCompletedTasks } = useAppState();
   const isDark = theme === 'dark';
-  const totalXP = skills.reduce((sum, skill) => sum + skill.xp, 0);
-  const totalLevel = skills.reduce((sum, skill) => sum + skill.level, 0);
 
   const achievements = [
-    { id: 1, name: 'Premier pas', description: 'Compléter votre première tâche', earned: true, color: '#FFD700' },
-    { id: 2, name: 'Persévérant', description: '7 jours de suite', earned: true, color: '#FF5733' },
-    { id: 3, name: 'Expert', description: 'Atteindre le niveau 5', earned: true, color: '#8B5CF6' },
-    { id: 4, name: 'Polyvalent', description: 'Pratiquer 4 compétences', earned: true, color: '#10B981' },
-    { id: 5, name: 'Marathonien', description: '30 jours de suite', earned: false, color: '#4CAF50' },
-    { id: 6, name: 'Maître', description: 'Atteindre le niveau 10', earned: false, color: '#3B82F6' },
+    { id: 1, name: 'Premier pas', description: 'Compléter votre première tâche', earned: totalCompletedTasks >= 1, color: '#FFD700' },
+    { id: 2, name: 'Persévérant', description: '7 jours de suite', earned: skills.some((skill) => skill.streak >= 7), color: '#FF5733' },
+    { id: 3, name: 'Expert', description: 'Atteindre le niveau 5', earned: totalLevel >= 5, color: '#8B5CF6' },
+    { id: 4, name: 'Polyvalent', description: 'Pratiquer 4 compétences', earned: skills.length >= 4, color: '#10B981' },
+    { id: 5, name: 'Marathonien', description: '30 jours de suite', earned: skills.some((skill) => skill.streak >= 30), color: '#4CAF50' },
+    { id: 6, name: 'Maître', description: 'Atteindre le niveau 10', earned: totalLevel >= 10, color: '#3B82F6' },
   ];
+
+  const profile = user ?? {
+    name: 'Utilisateur',
+    email: 'inconnu',
+    initials: 'U',
+  };
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
@@ -51,16 +56,16 @@ export function ProfileScreen({ onNavigateToSettings }: ProfileScreenProps) {
               style={[
                 styles.avatar,
                 {
-                  backgroundColor: '#E23E57',
+                  backgroundColor: colors.buttonPrimary,
                 }
               ]}
             >
-              <Text style={styles.avatarText}>JD</Text>
+              <Text style={styles.avatarText}>{profile.initials}</Text>
             </View>
 
             <View style={styles.profileInfo}>
-              <Text style={[styles.profileName, { color: colors.textPrimary }]}>Jean Dupont</Text>
-              <Text style={[styles.profileEmail, { color: colors.textSecondary }]}>jean.dupont@email.com</Text>
+              <Text style={[styles.profileName, { color: colors.textPrimary }]}>{profile.name}</Text>
+              <Text style={[styles.profileEmail, { color: colors.textSecondary }]}>{profile.email}</Text>
             </View>
 
             <LevelBadge level={totalLevel} size="lg" />
@@ -203,6 +208,7 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.5,
     shadowRadius: 24,
+    elevation: 10,
   },
   avatarText: {
     fontSize: 28,
@@ -211,6 +217,14 @@ const styles = StyleSheet.create({
   },
   profileInfo: {
     flex: 1,
+  },
+  profileName: {
+    fontSize: 20,
+    fontWeight: 'bold',
+  },
+  profileEmail: {
+    fontSize: 14,
+    marginTop: 4,
   },
   statsRow: {
     flexDirection: 'row',

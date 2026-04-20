@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -11,13 +11,18 @@ import {
 import { Icon } from '../components/ui/Icon';
 import { useTheme } from '../context/ThemeContext';
 
+const APP_VERSION = '0.0.1';
+
 interface SettingsScreenProps {
   onBack: () => void;
+  onLogout: () => void;
 }
 
-export function SettingsScreen({ onBack }: SettingsScreenProps) {
+export function SettingsScreen({ onBack, onLogout }: SettingsScreenProps) {
   const { theme, colors, toggleTheme } = useTheme();
   const isDark = theme === 'dark';
+  const [pushEnabled, setPushEnabled] = useState(true);
+  const [soundEnabled, setSoundEnabled] = useState(true);
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
@@ -49,7 +54,7 @@ export function SettingsScreen({ onBack }: SettingsScreenProps) {
                 onValueChange={toggleTheme}
                 trackColor={{ false: '#10B981', true: '#8B5CF6' }}
                 thumbColor="#F8FAFC"
-                iosBackgroundStyle="dark"
+                ios_backgroundColor={isDark ? '#475569' : '#CBD5E1'}
               />
             </View>
           </View>
@@ -67,11 +72,11 @@ export function SettingsScreen({ onBack }: SettingsScreenProps) {
                 <Text style={[styles.settingText, { color: colors.textPrimary }]}>Notifications push</Text>
               </View>
               <Switch
-                value={true}
-                onValueChange={() => {}}
+                value={pushEnabled}
+                onValueChange={setPushEnabled}
                 trackColor={{ false: '#475569', true: '#E23E57' }}
                 thumbColor="#F8FAFC"
-                iosBackgroundStyle="dark"
+                ios_backgroundColor={isDark ? '#475569' : '#CBD5E1'}
               />
             </View>
 
@@ -85,11 +90,11 @@ export function SettingsScreen({ onBack }: SettingsScreenProps) {
                 <Text style={[styles.settingText, { color: colors.textPrimary }]}>Sons</Text>
               </View>
               <Switch
-                value={true}
-                onValueChange={() => {}}
+                value={soundEnabled}
+                onValueChange={setSoundEnabled}
                 trackColor={{ false: '#475569', true: '#10B981' }}
                 thumbColor="#F8FAFC"
-                iosBackgroundStyle="dark"
+                ios_backgroundColor={isDark ? '#475569' : '#CBD5E1'}
               />
             </View>
           </View>
@@ -146,14 +151,17 @@ export function SettingsScreen({ onBack }: SettingsScreenProps) {
                 </View>
                 <Text style={[styles.settingText, { color: colors.textPrimary }]}>Version de l'application</Text>
               </View>
-              <Text style={[styles.versionText, { color: colors.textSecondary }]}>1.0.0</Text>
+              <Text style={[styles.versionText, { color: colors.textSecondary }]}>{APP_VERSION}</Text>
             </View>
           </View>
         </View>
 
         {/* Logout */}
         <View style={styles.section}>
-          <TouchableOpacity style={[styles.logoutButton, { backgroundColor: 'rgba(239, 68, 68, 0.1)', borderColor: 'rgba(239, 68, 68, 0.2)' }]}>
+          <TouchableOpacity
+            style={[styles.logoutButton, { backgroundColor: 'rgba(239, 68, 68, 0.1)', borderColor: 'rgba(239, 68, 68, 0.2)' }]}
+            onPress={onLogout}
+          >
             <Icon name="logout" size={20} color="#EF4444" />
             <Text style={styles.logoutText}>Se déconnecter</Text>
           </TouchableOpacity>

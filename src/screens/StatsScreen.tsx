@@ -6,14 +6,15 @@ import {
   ScrollView,
   StatusBar,
 } from 'react-native';
-import { Icon, IconName } from '../components/ui/Icon';
-import { LevelBadge } from '../components/ui/LevelBadge';
+import { Icon } from '../components/ui/Icon';
 import { ProgressBar } from '../components/ui/ProgressBar';
 import { useTheme } from '../context/ThemeContext';
-import { skills } from '../data/skills';
+import { getIconName } from '../utils/iconHelper';
+import { useAppState } from '../context/AppStateContext';
 
 export function StatsScreen() {
   const { colors, theme } = useTheme();
+  const { skills, totalXP, totalLevel, longestStreak, totalCompletedTasks, totalTasks } = useAppState();
   const isDark = theme === 'dark';
 
   const weeklyData = [
@@ -25,10 +26,6 @@ export function StatsScreen() {
     { day: 'Sam', completion: 70 },
     { day: 'Dim', completion: 50 },
   ];
-
-  const totalXP = skills.reduce((sum, skill) => sum + skill.xp, 0);
-  const longestStreak = Math.max(...skills.map((s) => s.streak));
-  const totalLevel = skills.reduce((sum, skill) => sum + skill.level, 0);
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
@@ -73,21 +70,23 @@ export function StatsScreen() {
             <View
               style={[
                 styles.statIconContainer,
-                { backgroundColor: 'rgba(245, 158, 11, 0.15)' }
+                { backgroundColor: 'rgba(139, 92, 246, 0.15)' }
               ]}
             >
-              <Icon name="trophy" size={20} color="#F59E0B" />
+              <Icon name="trophy" size={20} color="#8B5CF6" />
             </View>
-            <Text style={[styles.statValue, { color: colors.textPrimary }]}>12</Text>
+            <Text style={[styles.statValue, { color: colors.textPrimary }]}>{totalCompletedTasks}</Text>
             <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Succès débloqués</Text>
           </View>
         </View>
 
         {/* Weekly Completion */}
         <View style={[styles.card, { backgroundColor: colors.cardBackground, borderColor: colors.cardBorder }]}>
-          <Text style={[styles.cardTitle, { color: colors.textPrimary }]}>Complétion hebdomadaire</Text>
+          <Text style={[styles.cardTitle, { color: colors.textPrimary }]}>
+            Complétion hebdomadaire ({totalCompletedTasks}/{totalTasks})
+          </Text>
           <View style={styles.barChart}>
-            {weeklyData.map((item, index) => (
+            {weeklyData.map((item) => (
               <View key={item.day} style={styles.barContainer}>
                 <View style={styles.barWrapper}>
                   <View
@@ -117,7 +116,9 @@ export function StatsScreen() {
                   <Text style={[styles.skillName, { color: colors.textPrimary }]}>{skill.name}</Text>
                 </View>
                 <View style={styles.skillProgress}>
-                  <ProgressBar progress={skill.progress} color={skill.color} height={8} />
+                  <View style={styles.progressBarWrapper}>
+                    <ProgressBar progress={skill.progress} color={skill.color} height={8} />
+                  </View>
                   <Text style={[styles.progressText, { color: colors.textSecondary }]}>{skill.progress}%</Text>
                 </View>
               </View>
@@ -128,16 +129,6 @@ export function StatsScreen() {
     </View>
   );
 }
-
-const getIconName = (iconName: string): IconName => {
-  const iconMap: Record<string, IconName> = {
-    music: 'music',
-    camera: 'camera',
-    dumbbell: 'fitness',
-    translate: 'language',
-  };
-  return iconMap[iconName] || 'star';
-};
 
 const styles = StyleSheet.create({
   container: {
@@ -166,6 +157,7 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.4,
     shadowRadius: 32,
+    elevation: 12,
   },
   xpHeader: {
     flexDirection: 'row',
@@ -280,10 +272,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 12,
   },
+  progressBarWrapper: {
+    flex: 1,
+  },
   progressText: {
     fontSize: 12,
     fontWeight: '600',
-    width: 40,
+    width: 44,
+    flexShrink: 0,
     textAlign: 'right',
   },
 });
