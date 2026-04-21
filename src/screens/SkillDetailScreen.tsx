@@ -11,10 +11,12 @@ import { LevelBadge } from '../components/ui/LevelBadge';
 import { ProgressBar } from '../components/ui/ProgressBar';
 import { TaskItem } from '../components/TaskItem';
 import { PrimaryButton } from '../components/ui/PrimaryButton';
+import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs';
 import { getIconEmoji } from '../utils/iconHelper';
 import { useSkills } from '../hooks/useSkills';
 import { useSession } from '../hooks/useSession';
 import { useTranslation } from '../i18n';
+import { useTheme } from '../context/ThemeContext';
 import { useRoute, useNavigation } from '@react-navigation/native';
 import type { RouteProp } from '@react-navigation/native';
 import type { HomeStackParamList } from '../types/navigation';
@@ -29,6 +31,7 @@ export function SkillDetailScreen() {
   const { colors, theme } = useTheme();
 
   const { activeSessions, acceptedPlans, startSession, completeSession } = useSession();
+  const tabBarHeight = useBottomTabBarHeight();
   const { t } = useTranslation();
   const [sessionMessage, setSessionMessage] = useState('');
   const isDark = theme === 'dark';
@@ -115,7 +118,7 @@ export function SkillDetailScreen() {
       <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
         <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>{t('skill_detail_tasks_week')}</Text>
 
-        <View style={styles.tasksContainer}>
+        <View style={[styles.tasksContainer, { paddingBottom: tabBarHeight + 100 }]}>
           {tasksToDisplay.map((task) => (
             <TaskItem
               key={task.id}
@@ -130,7 +133,7 @@ export function SkillDetailScreen() {
       </ScrollView>
 
       {/* Floating Action Button */}
-      <View style={styles.fabContainer}>
+      <View style={[styles.fabContainer, { bottom: tabBarHeight + 12 }]}>
         <PrimaryButton onPress={handleSessionPress}>
           {hasActiveSession ? t('skill_detail_btn_end') : t('skill_detail_btn_start')}
         </PrimaryButton>
@@ -225,11 +228,9 @@ const styles = StyleSheet.create({
   tasksContainer: {
     paddingHorizontal: 20,
     gap: 16,
-    paddingBottom: 120,
   },
   fabContainer: {
     position: 'absolute',
-    bottom: 100,
     left: 0,
     right: 0,
     paddingHorizontal: 20,

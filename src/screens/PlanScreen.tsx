@@ -283,7 +283,6 @@ export function PlanScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    paddingBottom: 100,
   },
   header: {
     paddingHorizontal: 20,

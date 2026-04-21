@@ -77,7 +77,7 @@ export function HomeScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, paddingBottom: 100 },
+  container: { flex: 1 },
   headerContainer: { paddingHorizontal: 20, paddingTop: 60, paddingBottom: 30 },
   header: { fontSize: 32, fontWeight: 'bold' },
   subHeader: { fontSize: 16 },

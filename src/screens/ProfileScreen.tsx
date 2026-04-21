@@ -179,27 +179,6 @@ export function ProfileScreen() {
           </View>
         </View>
 
-        {/* Quick Settings */}
-        <View style={[styles.settingsCard, { backgroundColor: colors.cardBackground, borderColor: colors.cardBorder }]}>
-          <TouchableOpacity style={styles.settingsItem} onPress={onNavigateToSettings}>
-            <Text style={[styles.settingsItemText, { color: colors.textPrimary }]}>{t('profile_settings')}</Text>
-            <Text style={[styles.chevron, { color: colors.textTertiary }]}>›</Text>
-          </TouchableOpacity>
-
-          <View style={[styles.dividerHorizontal, { backgroundColor: colors.divider}]} />
-
-          <TouchableOpacity style={styles.settingsItem} onPress={onNavigateToSettings}>
-            <Text style={[styles.settingsItemText, { color: colors.textPrimary }]}>{t('profile_notifications')}</Text>
-            <Text style={[styles.chevron, { color: colors.textTertiary }]}>›</Text>
-          </TouchableOpacity>
-
-          <View style={[styles.dividerHorizontal, { backgroundColor: colors.divider}]} />
-
-          <TouchableOpacity style={styles.settingsItem} onPress={onNavigateToSettings}>
-            <Text style={[styles.settingsItemText, { color: colors.textPrimary }]}>{t('profile_dark_mode')}</Text>
-            <Text style={[styles.chevron, { color: colors.textTertiary }]}>›</Text>
-          </TouchableOpacity>
-        </View>
       </ScrollView>
     </View>
   );
@@ -208,7 +187,6 @@ export function ProfileScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    paddingBottom: 100,
   },
   header: {
     flexDirection: 'row',
@@ -345,30 +323,5 @@ const styles = StyleSheet.create({
     fontSize: 10,
     fontWeight: '600',
     textAlign: 'center',
-  },
-  settingsCard: {
-    marginHorizontal: 20,
-    marginTop: 16,
-    borderRadius: 16,
-    overflow: 'hidden',
-    borderWidth: 1,
-  },
-  settingsItem: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingVertical: 16,
-  },
-  settingsItemText: {
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  chevron: {
-    fontSize: 24,
-  },
-  dividerHorizontal: {
-    height: 1,
-    marginHorizontal: 20,
   },
 });
