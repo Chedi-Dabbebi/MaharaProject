@@ -7,10 +7,11 @@ import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { AuthStackParamList } from '../types/navigation';
 import { Icon } from '../components/ui/Icon';
+import type { AuthProvider } from '../services/authService';
 
 export function SignUpScreen() {
   const { colors } = useTheme();
-  const { signUp } = useAuth();
+  const { signUp, signInWithProvider } = useAuth();
   const { t } = useTranslation();
   const navigation = useNavigation<NativeStackNavigationProp<AuthStackParamList>>();
   
@@ -22,7 +23,7 @@ export function SignUpScreen() {
   const [tosAccepted, setTosAccepted] = useState(false);
   
   const [errors, setErrors] = useState<{name?: string; email?: string; password?: string; confirm?: string; tos?: string; global?: string}>({});
-  const [isLoading, setIsLoading] = useState(false);
+  const [loadingAction, setLoadingAction] = useState<'email' | AuthProvider | null>(null);
 
   const validateEmail = (email: string): boolean => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -44,12 +45,12 @@ export function SignUpScreen() {
     }
 
     setErrors({});
-    setIsLoading(true);
+    setLoadingAction('email');
     
     // Auth context flows usually handle navigation automatically based on session creation,
     // but the prompt instructed: "On success navigate to EmailVerificationScreen"
     const { success, error } = await signUp(email, password, name);
-    setIsLoading(false);
+    setLoadingAction(null);
     
     if (!success) {
       setErrors({ global: error ? t(error as any) : t('error_network') });
@@ -57,6 +58,16 @@ export function SignUpScreen() {
     }
 
     navigation.navigate('EmailVerification', { email });
+  };
+
+  const handleSocialSignUp = async (provider: AuthProvider) => {
+    setErrors({});
+    setLoadingAction(provider);
+    const { success, error } = await signInWithProvider(provider);
+    setLoadingAction(null);
+    if (!success) {
+      setErrors({ global: error ? t(error as any) : t('error_oauth_start_failed') });
+    }
   };
 
   return (
@@ -74,7 +85,7 @@ export function SignUpScreen() {
               placeholderTextColor={colors.textSecondary}
               value={name}
               onChangeText={setName}
-              editable={!isLoading}
+              editable={!loadingAction}
             />
             {errors.name ? <Text style={[styles.errorText, { color: colors.error }]}>{errors.name}</Text> : null}
 
@@ -87,7 +98,7 @@ export function SignUpScreen() {
               onChangeText={setEmail}
               keyboardType="email-address"
               autoCapitalize="none"
-              editable={!isLoading}
+              editable={!loadingAction}
             />
             {errors.email ? <Text style={[styles.errorText, { color: colors.error }]}>{errors.email}</Text> : null}
 
@@ -100,7 +111,7 @@ export function SignUpScreen() {
                 value={password}
                 onChangeText={setPassword}
                 secureTextEntry={!showPassword}
-                editable={!isLoading}
+                editable={!loadingAction}
               />
               <TouchableOpacity style={styles.eyeIcon} onPress={() => setShowPassword(!showPassword)}>
                 <Icon name={showPassword ? 'eye' : 'eye-off'} size={20} color={colors.textSecondary} />
@@ -116,11 +127,11 @@ export function SignUpScreen() {
               value={confirmPassword}
               onChangeText={setConfirmPassword}
               secureTextEntry={!showPassword}
-              editable={!isLoading}
+              editable={!loadingAction}
             />
             {errors.confirm ? <Text style={[styles.errorText, { color: colors.error }]}>{errors.confirm}</Text> : null}
 
-            <TouchableOpacity style={styles.tosContainer} onPress={() => setTosAccepted(!tosAccepted)} disabled={isLoading}>
+            <TouchableOpacity style={styles.tosContainer} onPress={() => setTosAccepted(!tosAccepted)} disabled={Boolean(loadingAction)}>
               <View style={[styles.checkbox, { borderColor: colors.textSecondary }]}>
                 {tosAccepted ? <Icon name="checkmark" size={16} color={colors.primary} /> : null}
               </View>
@@ -130,13 +141,37 @@ export function SignUpScreen() {
             {errors.global ? <Text style={[styles.errorText, { color: colors.error, marginTop: 12 }]}>{errors.global}</Text> : null}
 
             <TouchableOpacity
-              style={[styles.button, { backgroundColor: isLoading ? colors.textMuted : colors.primary, shadowColor: colors.primary }]}
+              style={[styles.button, { backgroundColor: loadingAction ? colors.textMuted : colors.primary, shadowColor: colors.primary }]}
               onPress={handleSignUp}
-              disabled={isLoading}
+              disabled={Boolean(loadingAction)}
               activeOpacity={0.8}
             >
-              <Text style={[styles.buttonText, { color: '#ffffff' }]}>{isLoading ? t('signup_loading') : t('signup_button')}</Text>
+              <Text style={[styles.buttonText, { color: '#ffffff' }]}>{loadingAction === 'email' ? t('signup_loading') : t('signup_button')}</Text>
             </TouchableOpacity>
+
+            <View style={styles.socialContainer}>
+              <TouchableOpacity
+                style={[styles.socialButton, { borderColor: colors.border, backgroundColor: colors.inputBackground }]}
+                onPress={() => handleSocialSignUp('google')}
+                disabled={Boolean(loadingAction)}
+                activeOpacity={0.8}
+              >
+                <Text style={[styles.socialButtonText, { color: colors.textPrimary }]}>
+                  {loadingAction === 'google' ? t('login_loading') : t('login_google_button')}
+                </Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[styles.socialButton, { borderColor: colors.border, backgroundColor: colors.inputBackground }]}
+                onPress={() => handleSocialSignUp('facebook')}
+                disabled={Boolean(loadingAction)}
+                activeOpacity={0.8}
+              >
+                <Text style={[styles.socialButtonText, { color: colors.textPrimary }]}>
+                  {loadingAction === 'facebook' ? t('login_loading') : t('login_facebook_button')}
+                </Text>
+              </TouchableOpacity>
+            </View>
 
             <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backLink}>
               <Text style={[styles.linkText, { color: colors.buttonPrimary }]}>{t('back_to_login')}</Text>
@@ -166,6 +201,9 @@ const styles = StyleSheet.create({
   tosText: { fontSize: 14, fontWeight: '500' },
   button: { padding: 16, borderRadius: 12, alignItems: 'center', marginTop: 24, shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 8, elevation: 8 },
   buttonText: { fontSize: 18, fontWeight: 'bold' },
+  socialContainer: { marginTop: 14, gap: 10 },
+  socialButton: { borderRadius: 12, paddingVertical: 13, paddingHorizontal: 16, borderWidth: 1, alignItems: 'center' },
+  socialButtonText: { fontSize: 16, fontWeight: '700' },
   backLink: { marginTop: 24, alignItems: 'center' },
   linkText: { fontSize: 14, fontWeight: '600' },
 });

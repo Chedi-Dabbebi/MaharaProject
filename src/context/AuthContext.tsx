@@ -1,13 +1,23 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useEffect, useState, useCallback } from 'react';
+import { Linking } from 'react-native';
 import {
   getStorageSchemaVersion,
   loadPersistedAppState,
   savePersistedAppState,
 } from '../services/appStorage';
-import { getCurrentAuthUser, signIn, signUp, resetPassword, signOutCurrentUser } from '../services/authService';
+import {
+  getCurrentAuthUser,
+  signIn,
+  signUp,
+  resetPassword,
+  signOutCurrentUser,
+  signInWithOAuthProvider,
+  handleAuthDeepLink,
+  type AuthProvider,
+} from '../services/authService';
 import { ensureProfile, updateProfileBudget } from '../services/profileService';
 import { supabase, isSupabaseConfigured } from '../services/supabaseClient';
-import { bootstrapSkillProgress, loadSkillProgress } from '../services/progressRepository';
+import { bootstrapSkillProgress } from '../services/progressRepository';
 import { recalculateAllSkills } from '../logic/progression';
 import { skills as seedSkills } from '../data/skills';
 import { hasCompletedOnboarding, markOnboardingComplete } from '../services/onboardingService';
@@ -19,6 +29,7 @@ interface AuthContextType {
   user: UserProfile | null;
   onboardingComplete: boolean;
   signIn: (email: string, password: string) => Promise<{ success: boolean; error: string | null }>;
+  signInWithProvider: (provider: AuthProvider) => Promise<{ success: boolean; error: string | null }>;
   signUp: (email: string, password: string, name: string) => Promise<{ success: boolean; error: string | null }>;
   resetPassword: (email: string) => Promise<{ success: boolean; error: string | null }>;
   completeOnboarding: () => Promise<void>;
@@ -43,6 +54,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<UserProfile | null>(null);
   const [onboardingComplete, setOnboardingComplete] = useState(false);
 
+  const applyAuthUser = useCallback(async (authUser: { id: string; email: string }) => {
+    const profile = await ensureProfile(authUser.id, authUser.email);
+    setUser(toUserProfile(profile.id, profile.display_name, profile.email, profile.initials));
+    await bootstrapSkillProgress(authUser.id, recalculateAllSkills(seedSkills));
+  }, []);
+
   useEffect(() => {
     let isMounted = true;
     const hydrate = async () => {
@@ -60,9 +77,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
       const authUser = await getCurrentAuthUser();
       if (authUser) {
-        const profile = await ensureProfile(authUser.id, authUser.email);
-        setUser(toUserProfile(profile.id, profile.display_name, profile.email, profile.initials));
-        await bootstrapSkillProgress(authUser.id, recalculateAllSkills(seedSkills));
+        await applyAuthUser(authUser);
       }
       const onboardingDone = await hasCompletedOnboarding();
       setOnboardingComplete(onboardingDone);
@@ -72,6 +87,58 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     return () => {
       isMounted = false;
+    };
+  }, [applyAuthUser]);
+
+  useEffect(() => {
+    if (!isSupabaseConfigured) {
+      return;
+    }
+
+    const subscription = supabase.auth.onAuthStateChange((_event, session) => {
+      const nextUser = session?.user;
+      if (!nextUser) {
+        setUser(null);
+        return;
+      }
+      if (!nextUser.email) {
+        return;
+      }
+      void applyAuthUser({
+        id: nextUser.id,
+        email: nextUser.email,
+      });
+    });
+
+    return () => {
+      subscription.data.subscription.unsubscribe();
+    };
+  }, [applyAuthUser]);
+
+  useEffect(() => {
+    if (!isSupabaseConfigured) {
+      return;
+    }
+
+    const consumeUrl = async (url: string) => {
+      const result = await handleAuthDeepLink(url);
+      if (result.error) {
+        console.error('OAuth callback error', result.error);
+      }
+    };
+
+    void Linking.getInitialURL().then((url) => {
+      if (url) {
+        void consumeUrl(url);
+      }
+    });
+
+    const subscription = Linking.addEventListener('url', (event) => {
+      void consumeUrl(event.url);
+    });
+
+    return () => {
+      subscription.remove();
     };
   }, []);
 
@@ -92,9 +159,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (!email.trim() || password.length < 6) return { success: false, error: 'error_email_invalid' };
     const { user: authUser, error } = await signIn(email.trim(), password);
     if (error || !authUser) return { success: false, error };
-    
-    const profile = await ensureProfile(authUser.id, authUser.email);
-    setUser(toUserProfile(profile.id, profile.display_name, profile.email, profile.initials));
+    await applyAuthUser(authUser);
     return { success: true, error: null };
   };
 
@@ -102,9 +167,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (!email.trim() || password.length < 6 || !name.trim()) return { success: false, error: 'error_email_invalid' };
     const { user: authUser, error } = await signUp(email.trim(), password, name.trim());
     if (error || !authUser) return { success: false, error };
-    
-    const profile = await ensureProfile(authUser.id, authUser.email);
-    setUser(toUserProfile(profile.id, profile.display_name, profile.email, profile.initials));
+    await applyAuthUser(authUser);
+    return { success: true, error: null };
+  };
+
+  const signInWithProviderFlow = async (provider: AuthProvider): Promise<{ success: boolean; error: string | null }> => {
+    const { started, error } = await signInWithOAuthProvider(provider);
+    if (!started) {
+      return { success: false, error };
+    }
     return { success: true, error: null };
   };
 
@@ -166,6 +237,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         user,
         onboardingComplete,
         signIn: signInFlow,
+        signInWithProvider: signInWithProviderFlow,
         signUp: signUpFlow,
         resetPassword: resetPasswordFlow,
         completeOnboarding,

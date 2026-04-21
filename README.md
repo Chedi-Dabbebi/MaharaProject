@@ -47,3 +47,11 @@ Cette architecture garantira la modularité, la maintenabilité et l’évolutiv
 6. Conclusion
 l'application combine planification intelligente, analyse de performance et gamification dans une application mobile moderne développée avec React Native.
 Le projet vise à démontrer des compétences techniques en développement mobile tout en proposant une solution utile pour l’apprentissage et l’amélioration personnelle
+
+7. Configuration Auth Supabase (Email + Google + Facebook)
+- Variables d'environnement requises :
+  - `SUPABASE_URL`
+  - `SUPABASE_ANON_KEY`
+  - `SUPABASE_OAUTH_REDIRECT_URL` (par défaut dans l'app : `projectapp://auth/callback`)
+- Pour Google/Facebook dans Supabase Auth, ajouter exactement la redirect URL Android :
+  - `projectapp://auth/callback`

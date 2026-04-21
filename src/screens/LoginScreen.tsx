@@ -7,10 +7,11 @@ import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { AuthStackParamList } from '../types/navigation';
 import { Icon } from '../components/ui/Icon';
+import type { AuthProvider } from '../services/authService';
 
 export function LoginScreen() {
   const { colors } = useTheme();
-  const { signIn } = useAuth();
+  const { signIn, signInWithProvider } = useAuth();
   const { t } = useTranslation();
   const navigation = useNavigation<NativeStackNavigationProp<AuthStackParamList>>();
   
@@ -18,7 +19,7 @@ export function LoginScreen() {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
+  const [loadingAction, setLoadingAction] = useState<'email' | AuthProvider | null>(null);
 
   const validateEmail = (email: string): boolean => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -38,14 +39,24 @@ export function LoginScreen() {
       return;
     }
 
-    setIsLoading(true);
+    setLoadingAction('email');
     const { success, error: authError } = await signIn(email, password);
-    setIsLoading(false);
+    setLoadingAction(null);
     
     if (!success) {
       // Handle explicit supabase strings resolving to our translation nodes
       setError(t((authError || 'error_login_failed') as any));
       return;
+    }
+  };
+
+  const handleSocialLogin = async (provider: AuthProvider) => {
+    setError('');
+    setLoadingAction(provider);
+    const { success, error: authError } = await signInWithProvider(provider);
+    setLoadingAction(null);
+    if (!success) {
+      setError(t((authError || 'error_oauth_start_failed') as any));
     }
   };
 
@@ -69,7 +80,7 @@ export function LoginScreen() {
               onChangeText={setEmail}
               keyboardType="email-address"
               autoCapitalize="none"
-              editable={!isLoading}
+              editable={!loadingAction}
             />
 
             <Text style={[styles.label, { color: colors.textPrimary }]}>{t('password_label')}</Text>
@@ -81,7 +92,7 @@ export function LoginScreen() {
                 value={password}
                 onChangeText={setPassword}
                 secureTextEntry={!showPassword}
-                editable={!isLoading}
+                editable={!loadingAction}
               />
               <TouchableOpacity
                 style={styles.eyeIcon}
@@ -98,15 +109,39 @@ export function LoginScreen() {
             ) : null}
 
             <TouchableOpacity
-              style={[styles.button, { backgroundColor: isLoading ? colors.textMuted : colors.primary, shadowColor: colors.primary }]}
+              style={[styles.button, { backgroundColor: loadingAction ? colors.textMuted : colors.primary, shadowColor: colors.primary }]}
               onPress={handleLogin}
-              disabled={isLoading}
+              disabled={Boolean(loadingAction)}
               activeOpacity={0.8}
             >
               <Text style={[styles.buttonText, { color: '#ffffff' }]}>
-                {isLoading ? t('login_loading') : t('login_button')}
+                {loadingAction === 'email' ? t('login_loading') : t('login_button')}
               </Text>
             </TouchableOpacity>
+
+            <View style={styles.socialContainer}>
+              <TouchableOpacity
+                style={[styles.socialButton, { borderColor: colors.border, backgroundColor: colors.surfaceElevated }]}
+                onPress={() => handleSocialLogin('google')}
+                disabled={Boolean(loadingAction)}
+                activeOpacity={0.8}
+              >
+                <Text style={[styles.socialButtonText, { color: colors.textPrimary }]}>
+                  {loadingAction === 'google' ? t('login_loading') : t('login_google_button')}
+                </Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[styles.socialButton, { borderColor: colors.border, backgroundColor: colors.surfaceElevated }]}
+                onPress={() => handleSocialLogin('facebook')}
+                disabled={Boolean(loadingAction)}
+                activeOpacity={0.8}
+              >
+                <Text style={[styles.socialButtonText, { color: colors.textPrimary }]}>
+                  {loadingAction === 'facebook' ? t('login_loading') : t('login_facebook_button')}
+                </Text>
+              </TouchableOpacity>
+            </View>
 
             <View style={styles.linksContainer}>
               <TouchableOpacity onPress={() => navigation.navigate('ForgotPassword')}>
@@ -194,6 +229,21 @@ const styles = StyleSheet.create({
   linksContainer: {
     marginTop: 24,
     alignItems: 'center',
+  },
+  socialContainer: {
+    marginTop: 14,
+    gap: 10,
+  },
+  socialButton: {
+    borderRadius: 12,
+    paddingVertical: 13,
+    paddingHorizontal: 16,
+    borderWidth: 1,
+    alignItems: 'center',
+  },
+  socialButtonText: {
+    fontSize: 16,
+    fontWeight: '700',
   },
   linkText: {
     fontSize: 14,
