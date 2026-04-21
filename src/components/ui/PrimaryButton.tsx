@@ -1,5 +1,5 @@
-import React from 'react';
 import { TouchableOpacity, Text, StyleSheet, ViewStyle } from 'react-native';
+import { useTheme } from '../../context/ThemeContext';
 
 interface PrimaryButtonProps {
   children: React.ReactNode;
@@ -9,12 +9,17 @@ interface PrimaryButtonProps {
 }
 
 export function PrimaryButton({ children, onPress, disabled = false, fullWidth = false }: PrimaryButtonProps) {
+  const { colors } = useTheme();
   return (
     <TouchableOpacity
       onPress={onPress}
       disabled={disabled}
       style={[
         styles.button,
+        { 
+          backgroundColor: colors.primary,
+          shadowColor: colors.primary,
+        },
         fullWidth && styles.fullWidth,
         disabled && styles.disabled,
       ]}
@@ -30,14 +35,13 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
     paddingHorizontal: 32,
     borderRadius: 24,
-    backgroundColor: '#E23E57',
     alignItems: 'center',
     justifyContent: 'center',
-    shadowColor: '#E23E57',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.5,
     shadowRadius: 24,
   },
+
   fullWidth: {
     width: '100%',
   },

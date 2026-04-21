@@ -1,30 +1,11 @@
-export interface Task {
-  id: string;
-  title: string;
-  duration: string;
-  xp: number;
-  completed: boolean;
-}
-
-export interface Skill {
-  id: string;
-  name: string;
-  icon: string;
-  color: string;
-  progress: number;
-  level: number;
-  xp: number;
-  maxXp: number;
-  streak: number;
-  tasks: Task[];
-}
+import type { Skill } from '../types';
 
 export const skills: Skill[] = [
   {
     id: '1',
     name: 'Musique',
     icon: 'music',
-    color: '#E23E57',
+    color: '#6366F1',
     progress: 65,
     level: 5,
     xp: 650,

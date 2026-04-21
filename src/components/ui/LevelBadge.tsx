@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
+import { useTheme } from '../../context/ThemeContext';
 
 interface LevelBadgeProps {
   level: number;
@@ -7,6 +8,8 @@ interface LevelBadgeProps {
 }
 
 export function LevelBadge({ level, size = 'md' }: LevelBadgeProps) {
+  const { colors } = useTheme();
+
   const sizeConfig = {
     sm: { width: 40, height: 40, fontSize: 12 },
     md: { width: 48, height: 48, fontSize: 14 },
@@ -22,10 +25,12 @@ export function LevelBadge({ level, size = 'md' }: LevelBadgeProps) {
         {
           width: config.width,
           height: config.height,
+          backgroundColor: colors.secondary,
+          shadowColor: colors.secondary,
         }
       ]}
     >
-      <Text style={[styles.text, { fontSize: config.fontSize }]}>
+      <Text style={[styles.text, { fontSize: config.fontSize, color: '#ffffff' }]}>
         {level}
       </Text>
     </View>
@@ -35,16 +40,13 @@ export function LevelBadge({ level, size = 'md' }: LevelBadgeProps) {
 const styles = StyleSheet.create({
   container: {
     borderRadius: 16,
-    backgroundColor: '#8B5CF6',
     alignItems: 'center',
     justifyContent: 'center',
-    shadowColor: '#8B5CF6',
     shadowOffset: { width: 0, height: 0 },
     shadowOpacity: 0.5,
     shadowRadius: 20,
   },
   text: {
-    color: 'white',
     fontWeight: 'bold',
   },
 });

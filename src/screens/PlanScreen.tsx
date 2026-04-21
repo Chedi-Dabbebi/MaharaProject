@@ -6,28 +6,62 @@ import {
   ScrollView,
   TouchableOpacity,
   StatusBar,
+  ActivityIndicator,
 } from 'react-native';
 import { Icon } from '../components/ui/Icon';
 import { PrimaryButton } from '../components/ui/PrimaryButton';
 import { useTheme } from '../context/ThemeContext';
 import { getIconName } from '../utils/iconHelper';
-import { useAppState } from '../context/AppStateContext';
-import { Difficulty, GeneratedPlan } from '../logic/planGenerator';
+import { useSkills } from '../hooks/useSkills';
+import { useSession } from '../hooks/useSession';
+import { useTranslation } from '../i18n';
+import type { Difficulty, GeneratedPlan } from '../types';
+import { generatePlan } from '../logic/planGenerator';
 import { generatePlanWithAI } from '../services/aiPlanService';
+import { LoadingState } from '../components/ui/LoadingState';
+import { EmptyState } from '../components/ui/EmptyState';
+import { ErrorState } from '../components/ui/ErrorState';
 
 export function PlanScreen() {
   const { colors, theme } = useTheme();
-  const { skills, createPlan, saveDraftPlan, acceptPlan } = useAppState();
+  const { skills, isLoading, loadError, reload } = useSkills();
+  const { createPlan, saveDraftPlan, acceptPlan } = useSession();
+  const { t } = useTranslation();
   const isDark = theme === 'dark';
   const [selectedSkillId, setSelectedSkillId] = useState<string | null>(skills[0]?.id ?? null);
   const [difficulty, setDifficulty] = useState<Difficulty>('moyen');
   const [generatedPlan, setGeneratedPlan] = useState<GeneratedPlan | null>(null);
   const [statusMessage, setStatusMessage] = useState('');
+  const [isRegenerating, setIsRegenerating] = useState(false);
+  const [planError, setPlanError] = useState<string | null>(null);
 
   const selectedSkill = skills.find((skill) => skill.id === selectedSkillId) ?? null;
 
+  if (isLoading) {
+    return (
+      <View style={[styles.container, { backgroundColor: colors.background }]}>
+        <LoadingState message={t('plan_loading')} />
+      </View>
+    );
+  }
+
+  if (loadError || planError) {
+    return (
+      <View style={[styles.container, { backgroundColor: colors.background }]}>
+        <ErrorState message={loadError ?? planError ?? undefined} onRetry={() => { setPlanError(null); void reload(); }} />
+      </View>
+    );
+  }
+
   if (!selectedSkill) {
-    return null;
+    return (
+      <View style={[styles.container, { backgroundColor: colors.background }]}>
+        <EmptyState
+          title={t('plan_empty_title')}
+          subtitle={t('plan_empty_subtitle')}
+        />
+      </View>
+    );
   }
 
   const planToShow = generatedPlan ?? createPlan(selectedSkill.id, difficulty);
@@ -36,28 +70,33 @@ export function PlanScreen() {
   const plannedSessions = planToShow?.sessions ?? [];
 
   const handleRegenerate = async () => {
-    const aiPlan = await generatePlanWithAI({
-      skill: selectedSkill,
-      difficulty,
-    });
-    const nextPlan = aiPlan ?? createPlan(selectedSkill.id, difficulty);
-    if (!nextPlan) {
-      setStatusMessage('Impossible de generer un plan pour cette competence.');
-      return;
+    setIsRegenerating(true);
+    setPlanError(null);
+    try {
+      const aiPlan = await generatePlanWithAI({ skill: selectedSkill, difficulty });
+      const nextPlan = aiPlan ?? createPlan(selectedSkill.id, difficulty);
+      if (!nextPlan) {
+        setStatusMessage(t('msg_no_plan_generated'));
+        return;
+      }
+      setGeneratedPlan(nextPlan);
+      await saveDraftPlan(nextPlan, aiPlan ? 'ai' : 'fallback');
+      setStatusMessage(aiPlan ? t('msg_plan_ai_generated') : t('msg_plan_fallback_generated'));
+    } catch {
+      setPlanError(t('error_state_default'));
+    } finally {
+      setIsRegenerating(false);
     }
-    setGeneratedPlan(nextPlan);
-    await saveDraftPlan(nextPlan, aiPlan ? 'ai' : 'fallback');
-    setStatusMessage(aiPlan ? 'Plan IA généré.' : 'Plan régénéré (fallback local).');
   };
 
   const handleValidate = () => {
     const plan = generatedPlan ?? createPlan(selectedSkill.id, difficulty);
     if (!plan) {
-      setStatusMessage('Aucun plan a valider.');
+      setStatusMessage(t('msg_no_plan_to_validate'));
       return;
     }
     acceptPlan(plan);
-    setStatusMessage('Plan valide et enregistre.');
+    setStatusMessage(t('msg_plan_validated'));
   };
 
   return (
@@ -66,15 +105,15 @@ export function PlanScreen() {
 
       <ScrollView showsVerticalScrollIndicator={false}>
         <View style={styles.header}>
-          <Text style={[styles.title, { color: colors.textPrimary }]}>Générateur de Plan</Text>
+          <Text style={[styles.title, { color: colors.textPrimary }]}>{t('plan_title')}</Text>
           <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
-            Créez un plan d'entraînement personnalisé
+            {t('plan_subtitle')}
           </Text>
         </View>
 
         {/* Skill Selection */}
         <View style={[styles.card, { backgroundColor: colors.cardBackground, borderColor: colors.cardBorder }]}>
-          <Text style={[styles.cardLabel, { color: colors.textPrimary }]}>Compétence</Text>
+          <Text style={[styles.cardLabel, { color: colors.textPrimary }]}>{t('plan_skill_label')}</Text>
           <View style={styles.skillGrid}>
             {skills.map((skill) => {
               const isSelected = selectedSkill.id === skill.id;
@@ -90,9 +129,9 @@ export function PlanScreen() {
                     styles.skillButton,
                     {
                       backgroundColor: isSelected
-                        ? 'rgba(226, 62, 87, 0.15)'
-                        : isDark ? 'rgba(255, 255, 255, 0.03)' : 'rgba(0, 0, 0, 0.02)',
-                      borderColor: isSelected ? '#E23E57' : colors.cardBorder,
+                        ? `${colors.primary}26`
+                        : colors.surfaceElevated,
+                      borderColor: isSelected ? colors.primary : colors.border,
                     }
                   ]}
                 >
@@ -102,7 +141,7 @@ export function PlanScreen() {
                       { backgroundColor: `${skill.color}20` }
                     ]}
                   >
-                    <Icon name={getIconName(skill.icon)} size={16} color={isDark ? '#F8FAFC' : colors.textPrimary} />
+                    <Icon name={getIconName(skill.icon)} size={16} color={isDark ? '#E5E7EB' : colors.textPrimary} />
                   </View>
                   <Text style={[styles.skillName, { color: colors.textPrimary }]}>{skill.name}</Text>
                 </TouchableOpacity>
@@ -113,7 +152,7 @@ export function PlanScreen() {
 
         {/* Difficulty Selection */}
         <View style={[styles.card, { backgroundColor: colors.cardBackground, borderColor: colors.cardBorder }]}>
-          <Text style={[styles.cardLabel, { color: colors.textPrimary }]}>Difficulté</Text>
+          <Text style={[styles.cardLabel, { color: colors.textPrimary }]}>{t('plan_difficulty_label')}</Text>
           <View style={styles.difficultyContainer}>
             {(['facile', 'moyen', 'difficile'] as Difficulty[]).map((level) => (
               <TouchableOpacity
@@ -128,8 +167,8 @@ export function PlanScreen() {
                   {
                     backgroundColor:
                       difficulty === level
-                        ? '#E23E57'
-                        : isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)',
+                        ? colors.primary
+                        : colors.surfaceElevated,
                   }
                 ]}
               >
@@ -139,7 +178,7 @@ export function PlanScreen() {
                     { color: difficulty === level ? '#ffffff' : colors.textSecondary }
                   ]}
                 >
-                  {level.charAt(0).toUpperCase() + level.slice(1)}
+                  {t(`difficulty_${level}` as any)}
                 </Text>
               </TouchableOpacity>
             ))}
@@ -149,42 +188,41 @@ export function PlanScreen() {
         {/* Generated Plan Summary */}
         <View style={[styles.card, { backgroundColor: colors.cardBackground, borderColor: colors.cardBorder }]}>
           <View style={styles.planHeader}>
-            <Icon name="sparkle" size={20} color={isDark ? '#F8FAFC' : colors.textPrimary} />
-            <Text style={[styles.planTitle, { color: colors.textPrimary }]}>Plan Généré</Text>
+            <Icon name="sparkle" size={20} color={isDark ? '#E5E7EB' : colors.textPrimary} />
+            <Text style={[styles.planTitle, { color: colors.textPrimary }]}>{t('plan_generated_title')}</Text>
           </View>
 
           <View style={styles.planContent}>
-            <View style={[styles.planItem, { backgroundColor: 'rgba(59, 130, 246, 0.1)', borderColor: 'rgba(59, 130, 246, 0.2)' }]}>
-              <View style={[styles.planIconBox, { backgroundColor: 'rgba(59, 130, 246, 0.2)' }]}>
-                <Icon name="target" size={20} color="#3B82F6" />
+            <View style={[styles.planItem, { backgroundColor: `${colors.info}1A`, borderColor: `${colors.info}33` }]}>
+              <View style={[styles.planIconBox, { backgroundColor: `${colors.info}33` }]}>
+                <Icon name="target" size={20} color={colors.info} />
               </View>
               <View style={styles.planTextContainer}>
-                <Text style={[styles.planLabel, { color: colors.textSecondary }]}>Séances par semaine</Text>
-                <Text style={[styles.planValue, { color: colors.textPrimary }]}>{sessionsPerWeek} séances</Text>
+                <Text style={[styles.planLabel, { color: colors.textSecondary }]}>{t('plan_sessions_per_week')}</Text>
+                <Text style={[styles.planValue, { color: colors.textPrimary }]}>{t('plan_sessions_amount', { amount: sessionsPerWeek })}</Text>
               </View>
             </View>
 
-            <View style={[styles.planItem, { backgroundColor: 'rgba(139, 92, 246, 0.1)', borderColor: 'rgba(139, 92, 246, 0.2)' }]}>
-              <View style={[styles.planIconBox, { backgroundColor: 'rgba(139, 92, 246, 0.2)' }]}>
-                <Icon name="time" size={20} color="#8B5CF6" />
+            <View style={[styles.planItem, { backgroundColor: `${colors.accent}1A`, borderColor: `${colors.accent}33` }]}>
+              <View style={[styles.planIconBox, { backgroundColor: `${colors.accent}33` }]}>
+                <Icon name="time" size={20} color={colors.accent} />
               </View>
               <View style={styles.planTextContainer}>
-                <Text style={[styles.planLabel, { color: colors.textSecondary }]}>Temps hebdomadaire estimé</Text>
+                <Text style={[styles.planLabel, { color: colors.textSecondary }]}>{t('plan_weekly_time')}</Text>
                 <Text style={[styles.planValue, { color: colors.textPrimary }]}>{weeklyTime}</Text>
               </View>
             </View>
 
             <View style={[styles.planDescription, { borderTopColor: colors.divider }]}>
               <Text style={[styles.descriptionText, { color: colors.textSecondary }]}>
-                Votre plan personnalisé pour{' '}
-                <Text style={[styles.highlight, { color: colors.textPrimary }]}>{selectedSkill.name}</Text> inclut des
-                exercices progressifs adaptés à votre niveau ({selectedSkill.level}) et à
-                la difficulté sélectionnée.
+                {t('plan_description_prefix')}
+                <Text style={[styles.highlight, { color: colors.textPrimary }]}>{selectedSkill.name}</Text>
+                {t('plan_description_suffix', { level: selectedSkill.level })}
               </Text>
             </View>
 
             <View style={[styles.planDescription, { borderTopColor: colors.divider }]}>
-              <Text style={[styles.planLabel, { color: colors.textSecondary }]}>Séances planifiées</Text>
+              <Text style={[styles.planLabel, { color: colors.textSecondary }]}>{t('plan_planned_sessions')}</Text>
               {plannedSessions.length > 0 ? (
                 plannedSessions.map((session, index) => (
                   <View
@@ -192,8 +230,8 @@ export function PlanScreen() {
                     style={[
                       styles.sessionRow,
                       {
-                        backgroundColor: isDark ? 'rgba(255, 255, 255, 0.03)' : 'rgba(0, 0, 0, 0.03)',
-                        borderColor: colors.cardBorder,
+                        backgroundColor: colors.surfaceElevated,
+                        borderColor: colors.border,
                       },
                     ]}
                   >
@@ -208,7 +246,7 @@ export function PlanScreen() {
                 ))
               ) : (
                 <Text style={[styles.sessionMeta, { color: colors.textSecondary }]}>
-                  Génère un plan pour voir les tâches proposées.
+                  {t('plan_no_sessions')}
                 </Text>
               )}
             </View>
@@ -218,14 +256,19 @@ export function PlanScreen() {
         {/* Action Buttons */}
         <View style={styles.actionContainer}>
           <TouchableOpacity
-            style={[styles.regenerateButton, { backgroundColor: 'rgba(139, 92, 246, 0.1)', borderColor: '#8B5CF6' }]}
+            style={[styles.regenerateButton, { backgroundColor: `${colors.accent}1A`, borderColor: colors.accent, opacity: isRegenerating ? 0.6 : 1 }]}
             onPress={handleRegenerate}
+            disabled={isRegenerating}
           >
-            <Text style={[styles.regenerateText, { color: '#8B5CF6' }]}>Régénérer</Text>
+            {isRegenerating ? (
+              <ActivityIndicator size="small" color={colors.accent} />
+            ) : (
+              <Text style={[styles.regenerateText, { color: colors.accent }]}>{t('plan_regenerate')}</Text>
+            )}
           </TouchableOpacity>
           <View style={styles.validateButtonContainer}>
             <PrimaryButton fullWidth onPress={handleValidate}>
-              Valider
+              {t('plan_validate')}
             </PrimaryButton>
           </View>
         </View>

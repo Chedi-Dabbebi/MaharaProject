@@ -3,6 +3,8 @@ import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { Icon } from './ui/Icon';
 import { ProgressBar } from './ui/ProgressBar';
 import { getIconName } from '../utils/iconHelper';
+import { useTranslation } from '../i18n';
+import { useTheme } from '../context/ThemeContext';
 
 interface SkillCardProps {
   id: string;
@@ -29,13 +31,17 @@ function lightenColor(color: string, percent: number): string {
 }
 
 export function SkillCard({ id, name, icon, color, progress, level, onPress }: SkillCardProps) {
-  const lightColor = lightenColor(color, 20);
+  const { colors } = useTheme();
+  const { t } = useTranslation();
 
   return (
     <TouchableOpacity
       style={[
         styles.container,
-        { borderColor: `${color}40` }
+        { 
+          backgroundColor: colors.surfaceElevated,
+          borderColor: `${color}40`,
+        }
       ]}
       onPress={onPress}
       activeOpacity={0.8}
@@ -55,15 +61,15 @@ export function SkillCard({ id, name, icon, color, progress, level, onPress }: S
 
       {/* Content */}
       <View style={styles.content}>
-        <Text style={styles.name}>{name}</Text>
+        <Text style={[styles.name, { color: colors.textPrimary }]}>{name}</Text>
         <View
           style={[
             styles.levelBadge,
             { backgroundColor: `${color}25` }
           ]}
         >
-          <Text style={[styles.levelText, { color: lightColor }]}>
-            Niveau {level}
+          <Text style={[styles.levelText, { color }]}>
+            {t('skill_detail_level', { level })}
           </Text>
         </View>
       </View>
@@ -71,7 +77,9 @@ export function SkillCard({ id, name, icon, color, progress, level, onPress }: S
       {/* Progress */}
       <View style={styles.progressContainer}>
         <ProgressBar progress={progress} color={color} height={6} />
-        <Text style={styles.progressText}>{progress}% complété</Text>
+        <Text style={[styles.progressText, { color: colors.textMuted }]}>
+          {t('skill_card_completed', { progress })}
+        </Text>
       </View>
     </TouchableOpacity>
   );
@@ -83,7 +91,6 @@ const styles = StyleSheet.create({
     borderRadius: 24,
     padding: 20,
     borderWidth: 1,
-    backgroundColor: 'rgba(255, 255, 255, 0.08)',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.2,
@@ -107,7 +114,6 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   name: {
-    color: '#F8FAFC',
     fontSize: 16,
     fontWeight: 'bold',
     marginBottom: 8,
@@ -126,7 +132,6 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   progressText: {
-    color: '#94A3B8',
     fontSize: 12,
     fontWeight: '600',
   },

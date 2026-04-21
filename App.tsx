@@ -1,116 +1,40 @@
-import React, { useEffect, useState } from 'react';
-import { StyleSheet, View, StatusBar } from 'react-native';
+import React from 'react';
+import { StatusBar } from 'react-native';
+import { NavigationContainer } from '@react-navigation/native';
+import { RootNavigator } from './src/navigation/RootNavigator';
 import { ThemeProvider, useTheme } from './src/context/ThemeContext';
-import { AppStateProvider, useAppState } from './src/context/AppStateContext';
-import { HomeScreen } from './src/screens/HomeScreen';
-import { SkillDetailScreen } from './src/screens/SkillDetailScreen';
-import { PlanScreen } from './src/screens/PlanScreen';
-import { StatsScreen } from './src/screens/StatsScreen';
-import { ProfileScreen } from './src/screens/ProfileScreen';
-import { SettingsScreen } from './src/screens/SettingsScreen';
-import { LoadingScreen } from './src/screens/LoadingScreen';
-import { LoginScreen } from './src/screens/LoginScreen';
-import { BottomNavigation } from './src/components/BottomNavigation';
-
-type Screen = 'loading' | 'login' | 'home' | 'skillDetail' | 'plan' | 'stats' | 'profile' | 'settings';
+import { AuthProvider } from './src/context/AuthContext';
+import { SkillsProvider } from './src/context/SkillsContext';
+import { SessionProvider } from './src/context/SessionContext';
+import { LanguageProvider } from './src/context/LanguageContext';
 
 function AppContent() {
-  const { theme, colors } = useTheme();
-  const { appReady, isAuthenticated, getSkillById, logout } = useAppState();
-  const [currentScreen, setCurrentScreen] = useState<Screen>('loading');
-  const [selectedSkillId, setSelectedSkillId] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (!appReady) {
-      setCurrentScreen('loading');
-      return;
-    }
-
-    if (!isAuthenticated) {
-      setCurrentScreen('login');
-      return;
-    }
-
-    setCurrentScreen((screen) => (screen === 'loading' || screen === 'login' ? 'home' : screen));
-  }, [appReady, isAuthenticated]);
-
-  const handleSkillPress = (skillId: string) => {
-    setSelectedSkillId(skillId);
-    setCurrentScreen('skillDetail');
-  };
-
-  const handleNavigate = (screen: Screen) => {
-    setCurrentScreen(screen);
-  };
-
-  const handleBack = () => {
-    setCurrentScreen('home');
-    setSelectedSkillId(null);
-  };
-
-  const handleLogout = () => {
-    void logout();
-    setSelectedSkillId(null);
-    setCurrentScreen('login');
-  };
-
-  const selectedSkill = getSkillById(selectedSkillId);
-
-  const renderScreen = () => {
-    switch (currentScreen) {
-      case 'loading':
-        return <LoadingScreen />;
-      case 'login':
-        return <LoginScreen onLogin={() => handleNavigate('home')} />;
-      case 'home':
-        return <HomeScreen onSkillPress={handleSkillPress} />;
-      case 'skillDetail':
-        return selectedSkill ? (
-          <SkillDetailScreen skill={selectedSkill} onBack={handleBack} />
-        ) : (
-          <HomeScreen onSkillPress={handleSkillPress} />
-        );
-      case 'plan':
-        return <PlanScreen />;
-      case 'stats':
-        return <StatsScreen />;
-      case 'profile':
-        return <ProfileScreen onNavigateToSettings={() => setCurrentScreen('settings')} />;
-      case 'settings':
-        return <SettingsScreen onBack={() => setCurrentScreen('profile')} onLogout={handleLogout} />;
-      default:
-        return <HomeScreen onSkillPress={handleSkillPress} />;
-    }
-  };
-
+  const { theme } = useTheme();
+  
   return (
-    <View style={[styles.container, { backgroundColor: colors.background }]}>
+    <>
       <StatusBar barStyle={theme === 'dark' ? 'light-content' : 'dark-content'} />
-      <View style={[styles.screenContainer, { backgroundColor: colors.background }]}>{renderScreen()}</View>
-      {currentScreen !== 'loading' && currentScreen !== 'login' && (
-        <BottomNavigation activeScreen={currentScreen} onNavigate={handleNavigate} />
-      )}
-    </View>
+      <NavigationContainer>
+        <RootNavigator />
+      </NavigationContainer>
+    </>
   );
 }
 
 const App = () => {
   return (
-    <ThemeProvider initialTheme="dark">
-      <AppStateProvider>
-        <AppContent />
-      </AppStateProvider>
-    </ThemeProvider>
+    <LanguageProvider>
+      <ThemeProvider initialTheme="dark">
+        <AuthProvider>
+          <SkillsProvider>
+            <SessionProvider>
+              <AppContent />
+            </SessionProvider>
+          </SkillsProvider>
+        </AuthProvider>
+      </ThemeProvider>
+    </LanguageProvider>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  screenContainer: {
-    flex: 1,
-  },
-});
 
 export default App;

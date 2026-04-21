@@ -1,24 +1,4 @@
-import { Skill } from '../data/skills';
-
-export type Difficulty = 'facile' | 'moyen' | 'difficile';
-
-export interface PlannedSession {
-  dayLabel: string;
-  taskId: string;
-  taskTitle: string;
-  duration: string;
-  xp: number;
-}
-
-export interface GeneratedPlan {
-  skillId: string;
-  difficulty: Difficulty;
-  sessionsPerWeek: number;
-  weeklyTime: string;
-  recommendedTaskIds: string[];
-  sessions: PlannedSession[];
-  summary: string;
-}
+import type { Skill, Difficulty, PlannedSession, GeneratedPlan } from '../types';
 
 const baseSessions: Record<Difficulty, number> = {
   facile: 3,

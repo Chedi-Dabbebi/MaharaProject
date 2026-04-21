@@ -10,22 +10,54 @@ import { Icon } from '../components/ui/Icon';
 import { ProgressBar } from '../components/ui/ProgressBar';
 import { useTheme } from '../context/ThemeContext';
 import { getIconName } from '../utils/iconHelper';
-import { useAppState } from '../context/AppStateContext';
+import { useSkills } from '../hooks/useSkills';
+import { useTranslation } from '../i18n';
+import { LoadingState } from '../components/ui/LoadingState';
+import { EmptyState } from '../components/ui/EmptyState';
+import { ErrorState } from '../components/ui/ErrorState';
 
 export function StatsScreen() {
   const { colors, theme } = useTheme();
-  const { skills, totalXP, totalLevel, longestStreak, totalCompletedTasks, totalTasks } = useAppState();
+  const { skills, totalXP, totalLevel, longestStreak, totalCompletedTasks, totalTasks, isLoading, loadError, reload } = useSkills();
+  const { t } = useTranslation();
   const isDark = theme === 'dark';
 
   const weeklyData = [
-    { day: 'Lun', completion: 80 },
-    { day: 'Mar', completion: 60 },
-    { day: 'Mer', completion: 100 },
-    { day: 'Jeu', completion: 40 },
-    { day: 'Ven', completion: 90 },
-    { day: 'Sam', completion: 70 },
-    { day: 'Dim', completion: 50 },
+    { day: t('common_mon'), completion: 80 },
+    { day: t('common_tue'), completion: 60 },
+    { day: t('common_wed'), completion: 100 },
+    { day: t('common_thu'), completion: 40 },
+    { day: t('common_fri'), completion: 90 },
+    { day: t('common_sat'), completion: 70 },
+    { day: t('common_sun'), completion: 50 },
   ];
+
+  if (isLoading) {
+    return (
+      <View style={[styles.container, { backgroundColor: colors.background }]}>
+        <LoadingState message={t('stats_loading')} />
+      </View>
+    );
+  }
+
+  if (loadError) {
+    return (
+      <View style={[styles.container, { backgroundColor: colors.background }]}>
+        <ErrorState message={loadError} onRetry={reload} />
+      </View>
+    );
+  }
+
+  if (totalCompletedTasks === 0 && totalXP === 0) {
+    return (
+      <View style={[styles.container, { backgroundColor: colors.background }]}>
+        <EmptyState
+          title={t('stats_empty_title')}
+          subtitle={t('stats_empty_subtitle')}
+        />
+      </View>
+    );
+  }
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
@@ -33,20 +65,20 @@ export function StatsScreen() {
 
       <ScrollView showsVerticalScrollIndicator={false}>
         <View style={styles.header}>
-          <Text style={[styles.title, { color: colors.textPrimary }]}>Statistiques</Text>
-          <Text style={[styles.subtitle, { color: colors.textSecondary }]}>Suivez votre progression</Text>
+          <Text style={[styles.title, { color: colors.textPrimary }]}>{t('stats_title')}</Text>
+          <Text style={[styles.subtitle, { color: colors.textSecondary }]}>{t('stats_subtitle')}</Text>
         </View>
 
         {/* Total XP Card */}
-        <View style={[styles.xpCard, { backgroundColor: '#E23E57' }]}>
+        <View style={[styles.xpCard, { backgroundColor: colors.primary }]}>
           <View style={styles.xpHeader}>
-            <Text style={styles.xpLabel}>XP Total</Text>
+            <Text style={styles.xpLabel}>{t('stats_total_xp')}</Text>
             <View style={styles.sparkleContainer}>
               <Icon name="sparkle" size={20} color="#FFFFFF" />
             </View>
           </View>
           <Text style={styles.xpValue}>{totalXP.toLocaleString()}</Text>
-          <Text style={styles.xpSubtext}>Niveau global: {totalLevel}</Text>
+          <Text style={styles.xpSubtext}>{t('stats_global_level', { level: totalLevel })}</Text>
         </View>
 
         {/* Stats Grid */}
@@ -62,7 +94,7 @@ export function StatsScreen() {
               <Icon name="fire" size={20} color="#F59E0B" />
             </View>
             <Text style={[styles.statValue, { color: colors.textPrimary }]}>{longestStreak}</Text>
-            <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Jours de suite</Text>
+            <Text style={[styles.statLabel, { color: colors.textSecondary }]}>{t('stats_streak_days')}</Text>
           </View>
 
           {/* Achievements Card */}
@@ -76,14 +108,14 @@ export function StatsScreen() {
               <Icon name="trophy" size={20} color="#8B5CF6" />
             </View>
             <Text style={[styles.statValue, { color: colors.textPrimary }]}>{totalCompletedTasks}</Text>
-            <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Succès débloqués</Text>
+            <Text style={[styles.statLabel, { color: colors.textSecondary }]}>{t('stats_achievements_unlocked')}</Text>
           </View>
         </View>
 
         {/* Weekly Completion */}
         <View style={[styles.card, { backgroundColor: colors.cardBackground, borderColor: colors.cardBorder }]}>
           <Text style={[styles.cardTitle, { color: colors.textPrimary }]}>
-            Complétion hebdomadaire ({totalCompletedTasks}/{totalTasks})
+            {t('stats_weekly_completion', { completed: totalCompletedTasks, total: totalTasks })}
           </Text>
           <View style={styles.barChart}>
             {weeklyData.map((item) => (
@@ -94,7 +126,7 @@ export function StatsScreen() {
                       styles.bar,
                       {
                         height: `${item.completion}%`,
-                        backgroundColor: item.completion >= 70 ? '#E23E57' : isDark ? '#88304E' : '#CBD5E1',
+                        backgroundColor: item.completion >= 70 ? colors.primary : colors.textMuted,
                       }
                     ]}
                   />
@@ -107,12 +139,12 @@ export function StatsScreen() {
 
         {/* Skills Progress */}
         <View style={[styles.card, { backgroundColor: colors.cardBackground, borderColor: colors.cardBorder }]}>
-          <Text style={[styles.cardTitle, { color: colors.textPrimary }]}>Maîtrise des compétences</Text>
+          <Text style={[styles.cardTitle, { color: colors.textPrimary }]}>{t('stats_skill_mastery')}</Text>
           <View style={styles.skillsList}>
             {skills.map((skill) => (
               <View key={skill.id} style={styles.skillRow}>
                 <View style={styles.skillInfo}>
-                  <Icon name={getIconName(skill.icon)} size={16} color={isDark ? '#F8FAFC' : colors.textPrimary} />
+                  <Icon name={getIconName(skill.icon)} size={16} color={isDark ? '#E5E7EB' : colors.textPrimary} />
                   <Text style={[styles.skillName, { color: colors.textPrimary }]}>{skill.name}</Text>
                 </View>
                 <View style={styles.skillProgress}>
@@ -152,8 +184,6 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     padding: 24,
     borderWidth: 1,
-    borderColor: 'rgba(226, 62, 87, 0.5)',
-    shadowColor: '#E23E57',
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.4,
     shadowRadius: 32,

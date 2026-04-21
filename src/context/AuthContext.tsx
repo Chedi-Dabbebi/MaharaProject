@@ -1,0 +1,181 @@
+import React, { createContext, useContext, useEffect, useState } from 'react';
+import {
+  getStorageSchemaVersion,
+  loadPersistedAppState,
+  savePersistedAppState,
+} from '../services/appStorage';
+import { getCurrentAuthUser, signIn, signUp, resetPassword, signOutCurrentUser } from '../services/authService';
+import { ensureProfile, updateProfileBudget } from '../services/profileService';
+import { supabase, isSupabaseConfigured } from '../services/supabaseClient';
+import { bootstrapSkillProgress, loadSkillProgress } from '../services/progressRepository';
+import { recalculateAllSkills } from '../logic/progression';
+import { skills as seedSkills } from '../data/skills';
+import { hasCompletedOnboarding, markOnboardingComplete } from '../services/onboardingService';
+import type { UserProfile } from '../types';
+
+interface AuthContextType {
+  appReady: boolean;
+  isAuthenticated: boolean;
+  user: UserProfile | null;
+  onboardingComplete: boolean;
+  signIn: (email: string, password: string) => Promise<{ success: boolean; error: string | null }>;
+  signUp: (email: string, password: string, name: string) => Promise<{ success: boolean; error: string | null }>;
+  resetPassword: (email: string) => Promise<{ success: boolean; error: string | null }>;
+  completeOnboarding: () => Promise<void>;
+  updateUser: (displayName: string, initials: string, budgetMinutes: number) => Promise<{ success: boolean; error: string | null }>;
+  deleteAccount: () => Promise<{ success: boolean; error: string | null }>;
+  logout: () => Promise<void>;
+}
+
+export const AuthContext = createContext<AuthContextType | undefined>(undefined);
+
+function toUserProfile(id: string, displayName: string, email: string, initials: string): UserProfile {
+  return {
+    id,
+    name: displayName,
+    email,
+    initials,
+  };
+}
+
+export function AuthProvider({ children }: { children: React.ReactNode }) {
+  const [appReady, setAppReady] = useState(false);
+  const [user, setUser] = useState<UserProfile | null>(null);
+  const [onboardingComplete, setOnboardingComplete] = useState(false);
+
+  useEffect(() => {
+    let isMounted = true;
+    const hydrate = async () => {
+      const persisted = await loadPersistedAppState();
+      if (!isMounted) {
+        return;
+      }
+      if (persisted?.user) {
+        setUser({
+          id: (persisted.user as UserProfile).id ?? `local-${persisted.user.email}`,
+          name: persisted.user.name,
+          email: persisted.user.email,
+          initials: persisted.user.initials,
+        });
+      }
+      const authUser = await getCurrentAuthUser();
+      if (authUser) {
+        const profile = await ensureProfile(authUser.id, authUser.email);
+        setUser(toUserProfile(profile.id, profile.display_name, profile.email, profile.initials));
+        await bootstrapSkillProgress(authUser.id, recalculateAllSkills(seedSkills));
+      }
+      const onboardingDone = await hasCompletedOnboarding();
+      setOnboardingComplete(onboardingDone);
+      setAppReady(true);
+    };
+    void hydrate();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!appReady) {
+      return;
+    }
+    void savePersistedAppState({
+      schemaVersion: getStorageSchemaVersion(),
+      skills: [],
+      user,
+      acceptedPlans: {},
+      activeSessions: {},
+    });
+  }, [appReady, user]);
+
+  const signInFlow = async (email: string, password: string): Promise<{ success: boolean; error: string | null }> => {
+    if (!email.trim() || password.length < 6) return { success: false, error: 'error_email_invalid' };
+    const { user: authUser, error } = await signIn(email.trim(), password);
+    if (error || !authUser) return { success: false, error };
+    
+    const profile = await ensureProfile(authUser.id, authUser.email);
+    setUser(toUserProfile(profile.id, profile.display_name, profile.email, profile.initials));
+    return { success: true, error: null };
+  };
+
+  const signUpFlow = async (email: string, password: string, name: string): Promise<{ success: boolean; error: string | null }> => {
+    if (!email.trim() || password.length < 6 || !name.trim()) return { success: false, error: 'error_email_invalid' };
+    const { user: authUser, error } = await signUp(email.trim(), password, name.trim());
+    if (error || !authUser) return { success: false, error };
+    
+    const profile = await ensureProfile(authUser.id, authUser.email);
+    setUser(toUserProfile(profile.id, profile.display_name, profile.email, profile.initials));
+    return { success: true, error: null };
+  };
+
+  const resetPasswordFlow = async (email: string): Promise<{ success: boolean; error: string | null }> => {
+    const { success, error } = await resetPassword(email.trim());
+    return { success, error };
+  };
+
+  const completeOnboarding = async () => {
+    await markOnboardingComplete();
+    setOnboardingComplete(true);
+  };
+
+  const updateUser = async (displayName: string, initials: string, budgetMinutes: number): Promise<{ success: boolean; error: string | null }> => {
+    if (!user?.id) return { success: false, error: 'Not authenticated' };
+    try {
+      if (isSupabaseConfigured) {
+        const { error } = await supabase
+          .from('profiles')
+          .update({ display_name: displayName, initials, weekly_time_budget_minutes: budgetMinutes })
+          .eq('id', user.id);
+        if (error) return { success: false, error: error.message };
+      }
+      await updateProfileBudget(user.id, budgetMinutes);
+      setUser(prev => prev ? { ...prev, name: displayName, initials, weekly_time_budget_minutes: budgetMinutes } : prev);
+      return { success: true, error: null };
+    } catch (e) {
+      return { success: false, error: 'Update failed' };
+    }
+  };
+
+  const deleteAccount = async (): Promise<{ success: boolean; error: string | null }> => {
+    if (!isSupabaseConfigured) {
+      await signOutCurrentUser();
+      setUser(null);
+      return { success: true, error: null };
+    }
+    try {
+      const { error } = await (supabase as any).rpc('delete_user');
+      if (error) return { success: false, error: error.message };
+      await signOutCurrentUser();
+      setUser(null);
+      return { success: true, error: null };
+    } catch (e) {
+      return { success: false, error: 'Delete failed' };
+    }
+  };
+
+  const logout = async () => {
+    await signOutCurrentUser();
+    setUser(null);
+  };
+
+  return (
+    <AuthContext.Provider
+      value={{
+        appReady,
+        isAuthenticated: user !== null,
+        user,
+        onboardingComplete,
+        signIn: signInFlow,
+        signUp: signUpFlow,
+        resetPassword: resetPasswordFlow,
+        completeOnboarding,
+        updateUser,
+        deleteAccount,
+        logout,
+      }}
+    >
+      {children}
+    </AuthContext.Provider>
+  );
+}
+

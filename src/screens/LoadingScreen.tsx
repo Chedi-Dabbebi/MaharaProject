@@ -1,6 +1,7 @@
 import React, { useEffect } from 'react';
 import { View, StyleSheet, ActivityIndicator, Text } from 'react-native';
 import { useTheme } from '../context/ThemeContext';
+import { useTranslation } from '../i18n';
 
 interface LoadingScreenProps {
   onFinish?: () => void;
@@ -8,6 +9,7 @@ interface LoadingScreenProps {
 
 export function LoadingScreen({ onFinish }: LoadingScreenProps) {
   const { colors } = useTheme();
+  const { t } = useTranslation();
 
   useEffect(() => {
     if (!onFinish) {
@@ -24,7 +26,7 @@ export function LoadingScreen({ onFinish }: LoadingScreenProps) {
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       <ActivityIndicator size="large" color={colors.buttonPrimary} />
-      <Text style={[styles.text, { color: colors.textPrimary }]}>Chargement...</Text>
+      <Text style={[styles.text, { color: colors.textPrimary }]}>{t('loading_text')}</Text>
     </View>
   );
 }

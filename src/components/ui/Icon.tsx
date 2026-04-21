@@ -1,6 +1,7 @@
 import React from 'react';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { ViewStyle } from 'react-native';
+import { useTheme } from '../../context/ThemeContext';
 
 export type IconName =
   | 'music'
@@ -29,7 +30,12 @@ export type IconName =
   | 'user'
   | 'help'
   | 'info'
-  | 'logout';
+  | 'logout'
+  | 'checkmark-circle'
+  | 'trash'
+  | 'alert-circle'
+  | 'eye'
+  | 'eye-off';
 
 interface IconProps {
   name: IconName;
@@ -66,14 +72,22 @@ const iconMap: Record<IconName, string> = {
   help: 'help-circle-outline',
   info: 'information-circle-outline',
   logout: 'log-out-outline',
+  'checkmark-circle': 'checkmark-circle-outline',
+  trash: 'trash-outline',
+  'alert-circle': 'alert-circle-outline',
+  eye: 'eye-outline',
+  'eye-off': 'eye-off-outline',
 };
 
-export function Icon({ name, size = 24, color = '#94A3B8', style }: IconProps) {
+export function Icon({ name, size = 24, color, style }: IconProps) {
+  const { colors } = useTheme();
+  const iconColor = color ?? colors.iconDefault;
+
   return (
     <Ionicons
       name={iconMap[name]}
       size={size}
-      color={color}
+      color={iconColor}
       style={style}
     />
   );

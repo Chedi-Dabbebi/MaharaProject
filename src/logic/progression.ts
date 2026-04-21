@@ -1,4 +1,4 @@
-import { Skill } from '../data/skills';
+import type { Skill } from '../types';
 
 function computeProgress(completedXp: number, totalXp: number): number {
   if (totalXp <= 0) {

@@ -10,29 +10,54 @@ import {
 import { Icon } from '../components/ui/Icon';
 import { LevelBadge } from '../components/ui/LevelBadge';
 import { useTheme } from '../context/ThemeContext';
-import { useAppState } from '../context/AppStateContext';
+import { useAuth } from '../hooks/useAuth';
+import { useSkills } from '../hooks/useSkills';
+import { useTranslation } from '../i18n';
+import { useNavigation } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { ProfileStackParamList } from '../types/navigation';
+import { LoadingState } from '../components/ui/LoadingState';
+import { ErrorState } from '../components/ui/ErrorState';
 
-interface ProfileScreenProps {
-  onNavigateToSettings: () => void;
-}
-
-export function ProfileScreen({ onNavigateToSettings }: ProfileScreenProps) {
+export function ProfileScreen() {
   const { colors, theme } = useTheme();
-  const { user, skills, totalXP, totalLevel, totalCompletedTasks } = useAppState();
+  const { user, appReady } = useAuth();
+  const { skills, totalXP, totalLevel, totalCompletedTasks, isLoading, loadError, reload } = useSkills();
+  const { t } = useTranslation();
   const isDark = theme === 'dark';
+  
+  const navigation = useNavigation<NativeStackNavigationProp<ProfileStackParamList>>();
+  const onNavigateToSettings = () => navigation.navigate('Settings');
+  const onNavigateToEdit = () => navigation.navigate('EditProfile');
+
+  if (!appReady || isLoading) {
+    return (
+      <View style={{ flex: 1, backgroundColor: colors.background }}>
+        <LoadingState message={t('profile_loading')} />
+      </View>
+    );
+  }
+
+  if (loadError) {
+    return (
+      <View style={{ flex: 1, backgroundColor: colors.background }}>
+        <ErrorState message={loadError} onRetry={reload} />
+      </View>
+    );
+  }
 
   const achievements = [
-    { id: 1, name: 'Premier pas', description: 'Compléter votre première tâche', earned: totalCompletedTasks >= 1, color: '#FFD700' },
-    { id: 2, name: 'Persévérant', description: '7 jours de suite', earned: skills.some((skill) => skill.streak >= 7), color: '#FF5733' },
-    { id: 3, name: 'Expert', description: 'Atteindre le niveau 5', earned: totalLevel >= 5, color: '#8B5CF6' },
-    { id: 4, name: 'Polyvalent', description: 'Pratiquer 4 compétences', earned: skills.length >= 4, color: '#10B981' },
-    { id: 5, name: 'Marathonien', description: '30 jours de suite', earned: skills.some((skill) => skill.streak >= 30), color: '#4CAF50' },
-    { id: 6, name: 'Maître', description: 'Atteindre le niveau 10', earned: totalLevel >= 10, color: '#3B82F6' },
+    { id: 1, name: t('ach_first_step'), description: t('ach_first_step_desc'), earned: totalCompletedTasks >= 1, color: colors.warning },
+    { id: 2, name: t('ach_persistent'), description: t('ach_persistent_desc'), earned: skills.some((skill) => skill.streak >= 7), color: '#FF5733' },
+    { id: 3, name: t('ach_expert'), description: t('ach_expert_desc'), earned: totalLevel >= 5, color: colors.secondary },
+    { id: 4, name: t('ach_versatile'), description: t('ach_versatile_desc'), earned: skills.length >= 4, color: colors.success },
+    { id: 5, name: t('ach_marathoner'), description: t('ach_marathoner_desc'), earned: skills.some((skill) => skill.streak >= 30), color: '#4CAF50' },
+    { id: 6, name: t('ach_master'), description: t('ach_master_desc'), earned: totalLevel >= 10, color: colors.info },
   ];
 
   const profile = user ?? {
-    name: 'Utilisateur',
-    email: 'inconnu',
+    name: t('common_user'),
+    email: t('common_unknown'),
     initials: 'U',
   };
 
@@ -41,12 +66,20 @@ export function ProfileScreen({ onNavigateToSettings }: ProfileScreenProps) {
       <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} />
 
       <ScrollView showsVerticalScrollIndicator={false}>
-        {/* Header with Settings */}
+        {/* Header with Settings + Edit */}
         <View style={styles.header}>
-          <Text style={[styles.title, { color: colors.textPrimary }]}>Profil</Text>
-          <TouchableOpacity style={[styles.settingsButton, { backgroundColor: colors.cardBackground }]} onPress={onNavigateToSettings}>
-            <Icon name="settings" size={24} color={colors.iconDefault} />
-          </TouchableOpacity>
+          <Text style={[styles.title, { color: colors.textPrimary }]}>{t('profile_title')}</Text>
+          <View style={styles.headerActions}>
+            <TouchableOpacity
+              style={[styles.editButton, { backgroundColor: colors.cardBackground, borderColor: colors.cardBorder }]}
+              onPress={onNavigateToEdit}
+            >
+              <Text style={[styles.editButtonText, { color: colors.buttonPrimary }]}>{t('profile_edit_button')}</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={[styles.settingsButton, { backgroundColor: colors.cardBackground }]} onPress={onNavigateToSettings}>
+              <Icon name="settings" size={24} color={colors.iconDefault} />
+            </TouchableOpacity>
+          </View>
         </View>
 
         {/* Profile Card */}
@@ -56,7 +89,8 @@ export function ProfileScreen({ onNavigateToSettings }: ProfileScreenProps) {
               style={[
                 styles.avatar,
                 {
-                  backgroundColor: colors.buttonPrimary,
+                  backgroundColor: colors.primary,
+                  shadowColor: colors.primary,
                 }
               ]}
             >
@@ -74,19 +108,25 @@ export function ProfileScreen({ onNavigateToSettings }: ProfileScreenProps) {
           <View style={styles.statsRow}>
             <View style={styles.statItem}>
               <Text style={[styles.statValue, { color: colors.textPrimary }]}>{totalXP}</Text>
-              <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Total XP</Text>
+              <Text style={[styles.statLabel, { color: colors.textSecondary }]}>{t('profile_total_xp')}</Text>
             </View>
-            <View style={[styles.divider, { backgroundColor: colors.divider}]} />
+            <View style={[styles.divider, { backgroundColor: colors.divider }]} />
             <View style={styles.statItem}>
-              <Text style={[styles.statValue, { color: colors.textPrimary }]}>{skills.length}</Text>
-              <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Compétences</Text>
+              <Text style={[styles.statValue, { color: colors.textPrimary }]}>{totalCompletedTasks}</Text>
+              <Text style={[styles.statLabel, { color: colors.textSecondary }]}>{t('profile_sessions')}</Text>
             </View>
-            <View style={[styles.divider, { backgroundColor: colors.divider}]} />
+            <View style={[styles.divider, { backgroundColor: colors.divider }]} />
             <View style={styles.statItem}>
-              <Text style={[styles.statValue, { color: colors.textPrimary }]}>
-                {achievements.filter((a) => a.earned).length}
-              </Text>
-              <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Succès</Text>
+              {user?.weekly_time_budget_minutes ? (
+                <Text style={[styles.statValue, { color: colors.textPrimary }]}>
+                  {user.weekly_time_budget_minutes >= 60
+                    ? `${Math.round(user.weekly_time_budget_minutes / 60)}h`
+                    : `${user.weekly_time_budget_minutes}m`}
+                </Text>
+              ) : (
+                <Text style={[styles.statValue, { color: colors.textPrimary }]}>–</Text>
+              )}
+              <Text style={[styles.statLabel, { color: colors.textSecondary }]}>{t('profile_weekly_budget')}</Text>
             </View>
           </View>
         </View>
@@ -94,8 +134,8 @@ export function ProfileScreen({ onNavigateToSettings }: ProfileScreenProps) {
         {/* Achievements */}
         <View style={[styles.card, { backgroundColor: colors.cardBackground, borderColor: colors.cardBorder }]}>
           <View style={styles.cardHeader}>
-            <Icon name="trophy" size={20} color={isDark ? '#F8FAFC' : colors.textPrimary} />
-            <Text style={[styles.cardTitle, { color: colors.textPrimary }]}>Succès</Text>
+            <Icon name="trophy" size={20} color={colors.textPrimary} />
+            <Text style={[styles.cardTitle, { color: colors.textPrimary }]}>{t('profile_achievements')}</Text>
           </View>
 
           <View style={styles.achievementsGrid}>
@@ -128,7 +168,7 @@ export function ProfileScreen({ onNavigateToSettings }: ProfileScreenProps) {
                   {achievement.earned ? (
                     <Icon name="trophy" size={20} color={achievement.color} />
                   ) : (
-                    <Icon name="lock" size={20} color={isDark ? '#64748B' : '#94A3B8'} />
+                    <Icon name="lock" size={20} color={colors.textMuted} />
                   )}
                 </View>
                 <Text style={[styles.achievementName, { color: colors.textPrimary }]} numberOfLines={2}>
@@ -142,21 +182,21 @@ export function ProfileScreen({ onNavigateToSettings }: ProfileScreenProps) {
         {/* Quick Settings */}
         <View style={[styles.settingsCard, { backgroundColor: colors.cardBackground, borderColor: colors.cardBorder }]}>
           <TouchableOpacity style={styles.settingsItem} onPress={onNavigateToSettings}>
-            <Text style={[styles.settingsItemText, { color: colors.textPrimary }]}>Paramètres du compte</Text>
+            <Text style={[styles.settingsItemText, { color: colors.textPrimary }]}>{t('profile_settings')}</Text>
             <Text style={[styles.chevron, { color: colors.textTertiary }]}>›</Text>
           </TouchableOpacity>
 
           <View style={[styles.dividerHorizontal, { backgroundColor: colors.divider}]} />
 
           <TouchableOpacity style={styles.settingsItem} onPress={onNavigateToSettings}>
-            <Text style={[styles.settingsItemText, { color: colors.textPrimary }]}>Notifications</Text>
+            <Text style={[styles.settingsItemText, { color: colors.textPrimary }]}>{t('profile_notifications')}</Text>
             <Text style={[styles.chevron, { color: colors.textTertiary }]}>›</Text>
           </TouchableOpacity>
 
           <View style={[styles.dividerHorizontal, { backgroundColor: colors.divider}]} />
 
           <TouchableOpacity style={styles.settingsItem} onPress={onNavigateToSettings}>
-            <Text style={[styles.settingsItemText, { color: colors.textPrimary }]}>Mode sombre</Text>
+            <Text style={[styles.settingsItemText, { color: colors.textPrimary }]}>{t('profile_dark_mode')}</Text>
             <Text style={[styles.chevron, { color: colors.textTertiary }]}>›</Text>
           </TouchableOpacity>
         </View>
@@ -186,6 +226,21 @@ const styles = StyleSheet.create({
     padding: 8,
     borderRadius: 16,
   },
+  headerActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+  editButton: {
+    paddingHorizontal: 14,
+    paddingVertical: 7,
+    borderRadius: 20,
+    borderWidth: 1,
+  },
+  editButtonText: {
+    fontSize: 13,
+    fontWeight: '700',
+  },
   profileCard: {
     marginHorizontal: 20,
     borderRadius: 16,
@@ -204,7 +259,7 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     alignItems: 'center',
     justifyContent: 'center',
-    shadowColor: '#E23E57',
+    shadowColor: '#6366F1',
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.5,
     shadowRadius: 24,

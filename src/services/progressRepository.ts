@@ -1,4 +1,4 @@
-import { Skill } from '../data/skills';
+import type { Skill } from '../types';
 import { isSupabaseConfigured, supabase } from './supabaseClient';
 
 interface ProgressRow {

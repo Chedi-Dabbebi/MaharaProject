@@ -11,24 +11,45 @@ import { LevelBadge } from '../components/ui/LevelBadge';
 import { ProgressBar } from '../components/ui/ProgressBar';
 import { TaskItem } from '../components/TaskItem';
 import { PrimaryButton } from '../components/ui/PrimaryButton';
-import { Skill } from '../data/skills';
 import { getIconEmoji } from '../utils/iconHelper';
-import { useAppState } from '../context/AppStateContext';
+import { useSkills } from '../hooks/useSkills';
+import { useSession } from '../hooks/useSession';
+import { useTranslation } from '../i18n';
+import { useRoute, useNavigation } from '@react-navigation/native';
+import type { RouteProp } from '@react-navigation/native';
+import type { HomeStackParamList } from '../types/navigation';
+import { LoadingState } from '../components/ui/LoadingState';
+import { ErrorState } from '../components/ui/ErrorState';
 
-interface SkillDetailScreenProps {
-  skill: Skill;
-  onBack: () => void;
-}
+export function SkillDetailScreen() {
+  const route = useRoute<RouteProp<HomeStackParamList, 'SkillDetail'>>();
+  const navigation = useNavigation();
+  const { toggleTaskCompletion, getSkillById, isLoading } = useSkills();
+  const skill = getSkillById(route.params.skillId);
+  const { colors, theme } = useTheme();
 
-export function SkillDetailScreen({ skill, onBack }: SkillDetailScreenProps) {
-  const {
-    toggleTaskCompletion,
-    activeSessions,
-    acceptedPlans,
-    startSession,
-    completeSession,
-  } = useAppState();
+  const { activeSessions, acceptedPlans, startSession, completeSession } = useSession();
+  const { t } = useTranslation();
   const [sessionMessage, setSessionMessage] = useState('');
+  const isDark = theme === 'dark';
+
+  if (isLoading && !skill) {
+    return (
+      <View style={[styles.container, { backgroundColor: colors.background }]}>
+        <LoadingState message={t('skill_detail_loading')} />
+      </View>
+    );
+  }
+
+  if (!skill) {
+    return (
+      <View style={[styles.container, { backgroundColor: colors.background }]}>
+        <ErrorState message={t('skill_detail_not_found')} />
+      </View>
+    );
+  }
+
+  const onBack = () => navigation.goBack();
   const hasActiveSession = Boolean(activeSessions[skill.id]);
   const plannedTaskOrder = acceptedPlans[skill.id]?.recommendedTaskIds ?? [];
   const plannedTasks = plannedTaskOrder
@@ -42,13 +63,13 @@ export function SkillDetailScreen({ skill, onBack }: SkillDetailScreenProps) {
   };
 
   return (
-    <View style={styles.container}>
-      <StatusBar barStyle="light-content" />
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
+      <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} />
 
       {/* Header */}
-      <View style={[styles.header, { backgroundColor: `rgba(255,255,255,0.02)` }]}>
+      <View style={[styles.header, { backgroundColor: colors.surface, borderBottomColor: colors.border }]}>
         <TouchableOpacity onPress={onBack} style={styles.backButton}>
-          <Text style={styles.backButtonText}>←</Text>
+          <Text style={[styles.backButtonText, { color: colors.textPrimary }]}>←</Text>
         </TouchableOpacity>
 
         <View style={styles.headerContent}>
@@ -65,9 +86,9 @@ export function SkillDetailScreen({ skill, onBack }: SkillDetailScreenProps) {
           </View>
 
           <View style={styles.headerText}>
-            <Text style={styles.title}>{skill.name}</Text>
+            <Text style={[styles.title, { color: colors.textPrimary }]}>{skill.name}</Text>
             <View style={styles.streakBadge}>
-              <Text style={styles.streakText}>🔥 {skill.streak} jours</Text>
+              <Text style={styles.streakText}>{t('skill_detail_streak', { streak: skill.streak })}</Text>
             </View>
           </View>
 
@@ -77,8 +98,8 @@ export function SkillDetailScreen({ skill, onBack }: SkillDetailScreenProps) {
         {/* XP Progress */}
         <View style={styles.xpContainer}>
           <View style={styles.xpHeader}>
-            <Text style={styles.xpLabel}>Progression XP</Text>
-            <Text style={styles.xpValue}>
+            <Text style={[styles.xpLabel, { color: colors.textSecondary }]}>{t('skill_detail_progress')}</Text>
+            <Text style={[styles.xpValue, { color: colors.textPrimary }]}>
               {skill.xp} / {skill.maxXp} XP
             </Text>
           </View>
@@ -92,7 +113,7 @@ export function SkillDetailScreen({ skill, onBack }: SkillDetailScreenProps) {
 
       {/* Tasks List */}
       <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
-        <Text style={styles.sectionTitle}>Tâches de la semaine</Text>
+        <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>{t('skill_detail_tasks_week')}</Text>
 
         <View style={styles.tasksContainer}>
           {tasksToDisplay.map((task) => (
@@ -111,9 +132,9 @@ export function SkillDetailScreen({ skill, onBack }: SkillDetailScreenProps) {
       {/* Floating Action Button */}
       <View style={styles.fabContainer}>
         <PrimaryButton onPress={handleSessionPress}>
-          {hasActiveSession ? 'Terminer la séance' : 'Commencer la séance'}
+          {hasActiveSession ? t('skill_detail_btn_end') : t('skill_detail_btn_start')}
         </PrimaryButton>
-        {sessionMessage ? <Text style={styles.sessionMessage}>{sessionMessage}</Text> : null}
+        {sessionMessage ? <Text style={[styles.sessionMessage, { color: colors.textSecondary }]}>{sessionMessage}</Text> : null}
       </View>
     </View>
   );
@@ -128,7 +149,6 @@ const styles = StyleSheet.create({
     paddingTop: 60,
     paddingBottom: 24,
     borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255, 255, 255, 0.1)',
   },
   backButton: {
     padding: 8,
@@ -136,7 +156,6 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   backButtonText: {
-    color: '#F8FAFC',
     fontSize: 28,
   },
   headerContent: {
@@ -159,7 +178,6 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: '#F8FAFC',
     marginBottom: 4,
   },
   streakBadge: {
@@ -187,12 +205,10 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   xpLabel: {
-    color: '#94A3B8',
     fontSize: 14,
     fontWeight: '600',
   },
   xpValue: {
-    color: '#F8FAFC',
     fontSize: 14,
     fontWeight: 'bold',
   },
@@ -202,7 +218,6 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#F8FAFC',
     paddingHorizontal: 20,
     paddingTop: 24,
     paddingBottom: 16,
@@ -223,7 +238,6 @@ const styles = StyleSheet.create({
     marginTop: 10,
     textAlign: 'center',
     fontSize: 12,
-    color: '#94A3B8',
     fontWeight: '600',
   },
 });

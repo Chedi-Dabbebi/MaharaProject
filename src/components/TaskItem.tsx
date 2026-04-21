@@ -2,6 +2,7 @@ import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { Icon } from './ui/Icon';
 import { XPBadge } from './ui/XPBadge';
+import { useTheme } from '../context/ThemeContext';
 
 interface TaskItemProps {
   title: string;
@@ -12,11 +13,14 @@ interface TaskItemProps {
 }
 
 export function TaskItem({ title, duration, xp, completed, onToggle }: TaskItemProps) {
+  const { colors } = useTheme();
+
   return (
     <TouchableOpacity
       style={[
         styles.container,
-        completed && styles.completed,
+        { backgroundColor: colors.surfaceElevated, borderColor: colors.border },
+        completed && { opacity: 0.5 },
       ]}
       onPress={onToggle}
       activeOpacity={0.8}
@@ -26,8 +30,8 @@ export function TaskItem({ title, duration, xp, completed, onToggle }: TaskItemP
         style={[
           styles.checkbox,
           {
-            backgroundColor: completed ? '#8B5CF6' : 'transparent',
-            borderColor: completed ? '#8B5CF6' : 'rgba(255, 255, 255, 0.3)',
+            backgroundColor: completed ? colors.secondary : 'transparent',
+            borderColor: completed ? colors.secondary : colors.textMuted,
           }
         ]}
       >
@@ -41,14 +45,15 @@ export function TaskItem({ title, duration, xp, completed, onToggle }: TaskItemP
         <Text
           style={[
             styles.title,
+            { color: completed ? colors.textMuted : colors.textPrimary },
             completed && styles.titleCompleted,
           ]}
         >
           {title}
         </Text>
         <View style={styles.durationContainer}>
-          <Icon name="time" size={12} color="#94A3B8" />
-          <Text style={styles.duration}>{duration}</Text>
+          <Icon name="time" size={12} color={colors.textSecondary} />
+          <Text style={[styles.duration, { color: colors.textSecondary }]}>{duration}</Text>
         </View>
       </View>
 
@@ -65,9 +70,7 @@ const styles = StyleSheet.create({
     gap: 12,
     borderRadius: 16,
     padding: 16,
-    backgroundColor: 'rgba(255, 255, 255, 0.05)',
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.1)',
   },
   completed: {
     opacity: 0.5,
@@ -85,12 +88,10 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   title: {
-    color: '#F8FAFC',
     fontSize: 14,
     fontWeight: '600',
   },
   titleCompleted: {
-    color: '#64748B',
     textDecorationLine: 'line-through',
   },
   durationContainer: {
@@ -100,7 +101,6 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   duration: {
-    color: '#94A3B8',
     fontSize: 12,
   },
 });

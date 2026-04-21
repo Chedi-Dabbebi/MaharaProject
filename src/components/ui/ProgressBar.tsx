@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, StyleSheet } from 'react-native';
+import { useTheme } from '../../context/ThemeContext';
 
 interface ProgressBarProps {
   progress: number; // 0-100
@@ -7,7 +8,9 @@ interface ProgressBarProps {
   height?: number;
 }
 
-export function ProgressBar({ progress, color = '#8B5CF6', height = 8 }: ProgressBarProps) {
+export function ProgressBar({ progress, color, height = 8 }: ProgressBarProps) {
+  const { colors } = useTheme();
+  const barColor = color ?? colors.secondary;
   const clampedProgress = Math.min(100, Math.max(0, progress));
 
   return (

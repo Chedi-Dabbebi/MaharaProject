@@ -1,5 +1,4 @@
-import { Difficulty, GeneratedPlan } from '../logic/planGenerator';
-import { Skill } from '../data/skills';
+import type { Skill, Difficulty, GeneratedPlan } from '../types';
 
 const runtimeEnv =
   typeof process !== 'undefined' && process.env

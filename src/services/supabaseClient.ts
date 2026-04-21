@@ -37,6 +37,7 @@ function createSupabaseStub() {
       signUp: async () => ({ data: { user: null }, error: null }),
       signOut: async () => ({ data: null, error: null }),
       getSession: async () => ({ data: { session: null }, error: null }),
+      resetPasswordForEmail: async () => ({ data: null, error: null }),
     },
   };
 }

@@ -4,14 +4,27 @@ export type ThemeMode = 'dark' | 'light';
 
 interface ThemeColors {
   background: string;
-  cardBackground: string;
-  cardBorder: string;
+  surface: string;
+  surfaceElevated: string;
+  primary: string;
+  secondary: string;
+  accent: string;
   textPrimary: string;
   textSecondary: string;
+  textMuted: string;
+  success: string;
+  error: string;
+  warning: string;
+  info: string;
+  border: string;
+  divider: string;
+  hover: string;
+  // Backward compatibility alias keys
+  cardBackground: string;
+  cardBorder: string;
   textTertiary: string;
   iconDefault: string;
   iconActive: string;
-  divider: string;
   navBackground: string;
   navBorder: string;
   navActiveBg: string;
@@ -21,38 +34,64 @@ interface ThemeColors {
 }
 
 const darkTheme: ThemeColors = {
-  background: '#311D3F',
-  cardBackground: 'rgba(255, 255, 255, 0.05)',
-  cardBorder: 'rgba(255, 255, 255, 0.1)',
-  textPrimary: '#F8FAFC',
+  background: '#0B0F19',
+  surface: '#121826',
+  surfaceElevated: '#1E293B',
+  primary: '#6366F1',
+  secondary: '#8B5CF6',
+  accent: '#F59E0B',
+  textPrimary: '#E5E7EB',
   textSecondary: '#94A3B8',
+  textMuted: '#64748B',
+  success: '#4ADE80',
+  error: '#F87171',
+  warning: '#F59E0B',
+  info: '#3B82F6',
+  border: 'rgba(255, 255, 255, 0.1)',
+  divider: 'rgba(255, 255, 255, 0.1)',
+  hover: 'rgba(255, 255, 255, 0.05)',
+  // Legacy mappings
+  cardBackground: '#121826',
+  cardBorder: 'rgba(255, 255, 255, 0.1)',
   textTertiary: '#64748B',
   iconDefault: '#94A3B8',
-  iconActive: '#E23E57',
-  divider: 'rgba(255, 255, 255, 0.1)',
-  navBackground: 'rgba(255, 255, 255, 0.05)',
+  iconActive: '#6366F1',
+  navBackground: '#121826',
   navBorder: 'rgba(255, 255, 255, 0.1)',
-  navActiveBg: 'rgba(226, 62, 87, 0.1)',
-  buttonPrimary: '#E23E57',
-  inputBackground: 'rgba(255, 255, 255, 0.05)',
+  navActiveBg: 'rgba(99, 102, 241, 0.1)',
+  buttonPrimary: '#6366F1',
+  inputBackground: '#121826',
   inputBorder: 'rgba(255, 255, 255, 0.1)',
 };
 
 const lightTheme: ThemeColors = {
-  background: '#F8FAFC',
+  background: '#F6F8FF',
+  surface: '#FFFFFF',
+  surfaceElevated: '#EEF2FF',
+  primary: '#4F46E5',
+  secondary: '#7C3AED',
+  accent: '#F59E0B',
+  textPrimary: '#0F172A',
+  textSecondary: '#475569',
+  textMuted: '#94A3B8',
+  success: '#22C55E',
+  error: '#EF4444',
+  warning: '#F59E0B',
+  info: '#3B82F6',
+  border: '#E2E8F0',
+  divider: '#EEF2F7',
+  hover: '#F1F5FF',
+  // Legacy mappings
   cardBackground: '#FFFFFF',
   cardBorder: '#E2E8F0',
-  textPrimary: '#1E293B',
-  textSecondary: '#64748B',
   textTertiary: '#94A3B8',
-  iconDefault: '#64748B',
-  iconActive: '#E23E57',
-  divider: '#E2E8F0',
+  iconDefault: '#475569',
+  iconActive: '#4F46E5',
   navBackground: '#FFFFFF',
-  navBorder: '#E2E8F0',
-  navActiveBg: 'rgba(226, 62, 87, 0.1)',
-  buttonPrimary: '#E23E57',
-  inputBackground: '#F1F5F9',
+  navBorder: '#EEF2F7',
+  navActiveBg: '#EEF2FF',
+  buttonPrimary: '#4F46E5',
+  inputBackground: '#FFFFFF',
   inputBorder: '#E2E8F0',
 };
 

@@ -1,5 +1,4 @@
-import { Skill } from '../data/skills';
-import { GeneratedPlan } from '../logic/planGenerator';
+import type { Skill, GeneratedPlan } from '../types';
 
 export interface PersistedUser {
   id: string;
@@ -19,9 +18,8 @@ export interface PersistedAppState {
 const STORAGE_SCHEMA_VERSION = 1;
 
 declare global {
-  interface GlobalThis {
-    __MAHARA_APP_STATE__?: PersistedAppState;
-  }
+  // eslint-disable-next-line no-var
+  var __MAHARA_APP_STATE__: PersistedAppState | undefined;
 }
 
 export function getStorageSchemaVersion(): number {

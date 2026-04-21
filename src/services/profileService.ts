@@ -5,6 +5,7 @@ export interface ProfileRecord {
   display_name: string;
   email: string;
   initials: string;
+  weekly_time_budget_minutes?: number;
 }
 
 function buildDisplayFromEmail(email: string) {
@@ -43,7 +44,7 @@ export async function ensureProfile(userId: string, email: string): Promise<Prof
 
   const existing = await supabase
     .from('profiles')
-    .select('id, display_name, email, initials')
+    .select('id, display_name, email, initials, weekly_time_budget_minutes')
     .eq('id', userId)
     .maybeSingle();
 
@@ -59,7 +60,7 @@ export async function ensureProfile(userId: string, email: string): Promise<Prof
       email,
       initials: names.initials,
     })
-    .select('id, display_name, email, initials')
+    .select('id, display_name, email, initials, weekly_time_budget_minutes')
     .single();
 
   if (inserted.data) {
@@ -72,4 +73,17 @@ export async function ensureProfile(userId: string, email: string): Promise<Prof
     email,
     initials: names.initials,
   };
+}
+
+export async function updateProfileBudget(userId: string, minutes: number): Promise<boolean> {
+  if (!isSupabaseConfigured) {
+    return true;
+  }
+
+  const { error } = await supabase
+    .from('profiles')
+    .update({ weekly_time_budget_minutes: minutes })
+    .eq('id', userId);
+
+  return !error;
 }

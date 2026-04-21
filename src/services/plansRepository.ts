@@ -1,4 +1,4 @@
-import { GeneratedPlan } from '../logic/planGenerator';
+import type { GeneratedPlan } from '../types';
 import { isSupabaseConfigured, supabase } from './supabaseClient';
 
 export async function saveDraftPlan(userId: string, plan: GeneratedPlan, source: 'ai' | 'fallback') {
