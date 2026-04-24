@@ -11,6 +11,7 @@ import {
 import { Icon } from '../components/ui/Icon';
 import { PrimaryButton } from '../components/ui/PrimaryButton';
 import { useTheme } from '../context/ThemeContext';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { getIconName } from '../utils/iconHelper';
 import { useSkills } from '../hooks/useSkills';
 import { useSession } from '../hooks/useSession';
@@ -27,6 +28,7 @@ export function PlanScreen() {
   const { skills, isLoading, loadError, reload } = useSkills();
   const { createPlan, saveDraftPlan, acceptPlan } = useSession();
   const { t } = useTranslation();
+  const insets = useSafeAreaInsets();
   const isDark = theme === 'dark';
   const [selectedSkillId, setSelectedSkillId] = useState<string | null>(skills[0]?.id ?? null);
   const [difficulty, setDifficulty] = useState<Difficulty>('moyen');
@@ -103,7 +105,10 @@ export function PlanScreen() {
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} />
 
-      <ScrollView showsVerticalScrollIndicator={false}>
+      <ScrollView 
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{ paddingBottom: insets.bottom + 120 }}
+      >
         <View style={styles.header}>
           <Text style={[styles.title, { color: colors.textPrimary }]}>{t('plan_title')}</Text>
           <Text style={[styles.subtitle, { color: colors.textSecondary }]}>

@@ -1,5 +1,5 @@
 export const en = {
-  home_hello: 'Hello 👋',
+  home_hello: 'Hello {name} 👋',
   home_subtitle: 'What do you want to practice today?',
   loading_text: 'Loading...',
   login_welcome: 'Welcome 👋',

@@ -33,19 +33,20 @@ interface AuthContextType {
   signUp: (email: string, password: string, name: string) => Promise<{ success: boolean; error: string | null }>;
   resetPassword: (email: string) => Promise<{ success: boolean; error: string | null }>;
   completeOnboarding: () => Promise<void>;
-  updateUser: (displayName: string, initials: string, budgetMinutes: number) => Promise<{ success: boolean; error: string | null }>;
+  updateUser: (displayName: string, initials: string, budgetMinutes: number, avatarUrl?: string) => Promise<{ success: boolean; error: string | null }>;
   deleteAccount: () => Promise<{ success: boolean; error: string | null }>;
   logout: () => Promise<void>;
 }
 
 export const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-function toUserProfile(id: string, displayName: string, email: string, initials: string): UserProfile {
+function toUserProfile(id: string, displayName: string, email: string, initials: string, avatarUrl?: string): UserProfile {
   return {
     id,
     name: displayName,
     email,
     initials,
+    avatar_url: avatarUrl,
   };
 }
 
@@ -56,7 +57,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const applyAuthUser = useCallback(async (authUser: { id: string; email: string }) => {
     const profile = await ensureProfile(authUser.id, authUser.email);
-    setUser(toUserProfile(profile.id, profile.display_name, profile.email, profile.initials));
+    setUser(toUserProfile(profile.id, profile.display_name, profile.email, profile.initials, profile.avatar_url));
     await bootstrapSkillProgress(authUser.id, recalculateAllSkills(seedSkills));
   }, []);
 
@@ -73,6 +74,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           name: persisted.user.name,
           email: persisted.user.email,
           initials: persisted.user.initials,
+          avatar_url: persisted.user.avatar_url,
         });
       }
       const authUser = await getCurrentAuthUser();
@@ -189,18 +191,29 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setOnboardingComplete(true);
   };
 
-  const updateUser = async (displayName: string, initials: string, budgetMinutes: number): Promise<{ success: boolean; error: string | null }> => {
+  const updateUser = async (displayName: string, initials: string, budgetMinutes: number, avatarUrl?: string): Promise<{ success: boolean; error: string | null }> => {
     if (!user?.id) return { success: false, error: 'Not authenticated' };
     try {
       if (isSupabaseConfigured) {
         const { error } = await supabase
           .from('profiles')
-          .update({ display_name: displayName, initials, weekly_time_budget_minutes: budgetMinutes })
+          .update({
+            display_name: displayName,
+            initials,
+            weekly_time_budget_minutes: budgetMinutes,
+            avatar_url: avatarUrl,
+          })
           .eq('id', user.id);
         if (error) return { success: false, error: error.message };
       }
       await updateProfileBudget(user.id, budgetMinutes);
-      setUser(prev => prev ? { ...prev, name: displayName, initials, weekly_time_budget_minutes: budgetMinutes } : prev);
+      setUser(prev => prev ? {
+        ...prev,
+        name: displayName,
+        initials,
+        weekly_time_budget_minutes: budgetMinutes,
+        avatar_url: avatarUrl ?? prev.avatar_url
+      } : prev);
       return { success: true, error: null };
     } catch (e) {
       return { success: false, error: 'Update failed' };

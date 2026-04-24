@@ -11,8 +11,9 @@ import { LevelBadge } from '../components/ui/LevelBadge';
 import { ProgressBar } from '../components/ui/ProgressBar';
 import { TaskItem } from '../components/TaskItem';
 import { PrimaryButton } from '../components/ui/PrimaryButton';
+import { Icon } from '../components/ui/Icon';
 import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs';
-import { getIconEmoji } from '../utils/iconHelper';
+import { getIconName } from '../utils/iconHelper';
 import { useSkills } from '../hooks/useSkills';
 import { useSession } from '../hooks/useSession';
 import { useTranslation } from '../i18n';
@@ -80,12 +81,17 @@ export function SkillDetailScreen() {
             style={[
               styles.iconContainer,
               {
-                backgroundColor: `${skill.color}20`,
-                borderColor: `${skill.color}40`,
+                backgroundColor: colors.primary,
+                borderColor: 'rgba(255,255,255,0.2)',
+                shadowColor: colors.primary,
+                shadowOffset: { width: 0, height: 4 },
+                shadowOpacity: 0.3,
+                shadowRadius: 8,
+                elevation: 6,
               }
             ]}
           >
-            <Text style={{ fontSize: 32 }}>{getIconEmoji(skill.icon)}</Text>
+            <Icon name={getIconName(skill.icon)} size={32} color="#FFFFFF" />
           </View>
 
           <View style={styles.headerText}>
@@ -108,7 +114,7 @@ export function SkillDetailScreen() {
           </View>
           <ProgressBar
             progress={(skill.xp / skill.maxXp) * 100}
-            color={skill.color}
+            color={colors.primary}
             height={10}
           />
         </View>

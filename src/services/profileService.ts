@@ -5,6 +5,7 @@ export interface ProfileRecord {
   display_name: string;
   email: string;
   initials: string;
+  avatar_url?: string;
   weekly_time_budget_minutes?: number;
 }
 
@@ -39,12 +40,13 @@ export async function ensureProfile(userId: string, email: string): Promise<Prof
       display_name: names.displayName,
       email,
       initials: names.initials,
+      avatar_url: undefined,
     };
   }
 
   const existing = await supabase
     .from('profiles')
-    .select('id, display_name, email, initials, weekly_time_budget_minutes')
+    .select('id, display_name, email, initials, avatar_url, weekly_time_budget_minutes')
     .eq('id', userId)
     .maybeSingle();
 
@@ -60,7 +62,7 @@ export async function ensureProfile(userId: string, email: string): Promise<Prof
       email,
       initials: names.initials,
     })
-    .select('id, display_name, email, initials, weekly_time_budget_minutes')
+    .select('id, display_name, email, initials, avatar_url, weekly_time_budget_minutes')
     .single();
 
   if (inserted.data) {

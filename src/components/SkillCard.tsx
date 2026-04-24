@@ -31,55 +31,70 @@ function lightenColor(color: string, percent: number): string {
 }
 
 export function SkillCard({ id, name, icon, color, progress, level, onPress }: SkillCardProps) {
-  const { colors } = useTheme();
+  const { colors, theme } = useTheme();
   const { t } = useTranslation();
+  
+  const isDark = theme === 'dark';
 
   return (
     <TouchableOpacity
       style={[
         styles.container,
         { 
-          backgroundColor: colors.surfaceElevated,
-          borderColor: `${color}40`,
+          backgroundColor: isDark ? `${colors.primary}10` : colors.surfaceElevated,
+          borderColor: isDark ? `${colors.primary}25` : colors.border,
+          borderWidth: 1.5,
         }
       ]}
       onPress={onPress}
       activeOpacity={0.8}
     >
-      {/* Icon */}
-      <View
-        style={[
-          styles.iconWrapper,
-          {
-            backgroundColor: color,
-            shadowColor: color,
-          }
-        ]}
-      >
-        <Icon name={getIconName(icon)} size={32} color="#FFFFFF" />
+      {/* Background Ambient Icon Watermark */}
+      <View style={styles.ambientIconContainer}>
+        <Icon 
+          name={getIconName(icon)} 
+          size={110} 
+          color={isDark ? `${colors.primary}20` : 'rgba(0,0,0,0.08)'} 
+        />
       </View>
 
-      {/* Content */}
-      <View style={styles.content}>
-        <Text style={[styles.name, { color: colors.textPrimary }]}>{name}</Text>
+      {/* Header: Small precise icon + Level Badge */}
+      <View style={styles.headerRow}>
         <View
           style={[
-            styles.levelBadge,
-            { backgroundColor: `${color}25` }
+            styles.smallIconWrapper,
+            { 
+              backgroundColor: isDark ? colors.primary : colors.primary, 
+              shadowColor: colors.primary,
+              borderWidth: 1.5,
+              borderColor: isDark ? 'rgba(255,255,255,0.2)' : 'rgba(255,255,255,0.3)',
+            }
           ]}
         >
-          <Text style={[styles.levelText, { color }]}>
+          <Icon name={getIconName(icon)} size={20} color="#FFFFFF" />
+        </View>
+        <View style={[styles.levelBadge, { backgroundColor: isDark ? `${colors.primary}20` : `${colors.primary}10` }]}>
+          <Text style={[styles.levelText, { color: colors.primary }]}>
             {t('skill_detail_level', { level })}
           </Text>
         </View>
       </View>
 
-      {/* Progress */}
-      <View style={styles.progressContainer}>
-        <ProgressBar progress={progress} color={color} height={6} />
-        <Text style={[styles.progressText, { color: colors.textMuted }]}>
-          {t('skill_card_completed', { progress })}
+      {/* Main Content */}
+      <View style={styles.content}>
+        <Text style={[styles.name, { color: colors.textPrimary }]} numberOfLines={2}>
+          {name}
         </Text>
+      </View>
+
+      {/* Progress Footer */}
+      <View style={styles.progressContainer}>
+        <View style={styles.progressHeader}>
+          <Text style={[styles.progressText, { color: colors.textSecondary }]}>
+            {t('skill_card_completed', { progress })}
+          </Text>
+        </View>
+        <ProgressBar progress={progress} color={colors.primary} height={4} />
       </View>
     </TouchableOpacity>
   );
@@ -89,50 +104,70 @@ const styles = StyleSheet.create({
   container: {
     width: '48%',
     borderRadius: 24,
-    padding: 20,
-    borderWidth: 1,
+    padding: 18,
+    borderWidth: 1.5,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.2,
-    shadowRadius: 32,
-    elevation: 8,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.08,
+    shadowRadius: 24,
+    elevation: 4,
+    overflow: 'hidden',
+    position: 'relative',
+    justifyContent: 'space-between',
   },
-  iconWrapper: {
-    width: 56,
-    height: 56,
-    borderRadius: 18,
+  ambientIconContainer: {
+    position: 'absolute',
+    right: -25,
+    bottom: -15,
+    zIndex: -1,
+  },
+  headerRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    marginBottom: 20,
+  },
+  smallIconWrapper: {
+    width: 36,
+    height: 36,
+    borderRadius: 12,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.25,
-    shadowRadius: 24,
-    elevation: 10,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    elevation: 5,
   },
   content: {
+    flex: 1,
+    justifyContent: 'center',
     marginBottom: 16,
   },
   name: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    marginBottom: 8,
+    fontSize: 18,
+    fontWeight: '800',
+    letterSpacing: -0.3,
   },
   levelBadge: {
-    paddingHorizontal: 10,
+    paddingHorizontal: 8,
     paddingVertical: 4,
-    borderRadius: 8,
-    alignSelf: 'flex-start',
+    borderRadius: 12,
   },
   levelText: {
-    fontSize: 12,
-    fontWeight: 'bold',
+    fontSize: 11,
+    fontWeight: '800',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
   },
   progressContainer: {
     gap: 8,
   },
+  progressHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
   progressText: {
-    fontSize: 12,
-    fontWeight: '600',
+    fontSize: 11,
+    fontWeight: '700',
   },
 });

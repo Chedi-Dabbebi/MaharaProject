@@ -8,6 +8,7 @@ import {
 } from 'react-native';
 import { Icon } from '../components/ui/Icon';
 import { ProgressBar } from '../components/ui/ProgressBar';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '../context/ThemeContext';
 import { getIconName } from '../utils/iconHelper';
 import { useSkills } from '../hooks/useSkills';
@@ -20,6 +21,7 @@ export function StatsScreen() {
   const { colors, theme } = useTheme();
   const { skills, totalXP, totalLevel, longestStreak, totalCompletedTasks, totalTasks, isLoading, loadError, reload } = useSkills();
   const { t } = useTranslation();
+  const insets = useSafeAreaInsets();
   const isDark = theme === 'dark';
 
   const weeklyData = [
@@ -63,7 +65,10 @@ export function StatsScreen() {
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} />
 
-      <ScrollView showsVerticalScrollIndicator={false}>
+      <ScrollView 
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{ paddingBottom: Math.max(insets.bottom + 100, 120) }}
+      >
         <View style={styles.header}>
           <Text style={[styles.title, { color: colors.textPrimary }]}>{t('stats_title')}</Text>
           <Text style={[styles.subtitle, { color: colors.textSecondary }]}>{t('stats_subtitle')}</Text>
@@ -121,15 +126,15 @@ export function StatsScreen() {
             {weeklyData.map((item) => (
               <View key={item.day} style={styles.barContainer}>
                 <View style={styles.barWrapper}>
-                  <View
-                    style={[
-                      styles.bar,
-                      {
-                        height: `${item.completion}%`,
-                        backgroundColor: item.completion >= 70 ? colors.primary : colors.textMuted,
-                      }
-                    ]}
-                  />
+                      <View
+                        style={[
+                          styles.bar,
+                          {
+                            height: `${item.completion}%`,
+                            backgroundColor: colors.primary,
+                          }
+                        ]}
+                      />
                 </View>
                 <Text style={[styles.barLabel, { color: colors.textSecondary }]}>{item.day}</Text>
               </View>
@@ -149,7 +154,7 @@ export function StatsScreen() {
                 </View>
                 <View style={styles.skillProgress}>
                   <View style={styles.progressBarWrapper}>
-                    <ProgressBar progress={skill.progress} color={skill.color} height={8} />
+                    <ProgressBar progress={skill.progress} color={colors.primary} height={8} />
                   </View>
                   <Text style={[styles.progressText, { color: colors.textSecondary }]}>{skill.progress}%</Text>
                 </View>

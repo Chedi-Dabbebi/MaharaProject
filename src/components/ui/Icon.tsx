@@ -35,7 +35,18 @@ export type IconName =
   | 'trash'
   | 'alert-circle'
   | 'eye'
-  | 'eye-off';
+  | 'eye-off'
+  | 'mail'
+  | 'lock-closed'
+  | 'arrow-back'
+  | 'logo-google'
+  | 'logo-facebook'
+  | 'person'
+  | 'save'
+  | 'edit'
+  | 'alert-triangle'
+  | 'chevron-left'
+  | 'chevron-back';
 
 interface IconProps {
   name: IconName;
@@ -77,6 +88,17 @@ const iconMap: Record<IconName, string> = {
   'alert-circle': 'alert-circle-outline',
   eye: 'eye-outline',
   'eye-off': 'eye-off-outline',
+  mail: 'mail-outline',
+  'lock-closed': 'lock-closed-outline',
+  'arrow-back': 'arrow-back-outline',
+  'logo-google': 'logo-google',
+  'logo-facebook': 'logo-facebook',
+  person: 'person-outline',
+  save: 'save-outline',
+  edit: 'pencil-outline',
+  'alert-triangle': 'alert-circle-outline',
+  'chevron-left': 'chevron-back-outline',
+  'chevron-back': 'chevron-back-outline',
 };
 
 export function Icon({ name, size = 24, color, style }: IconProps) {

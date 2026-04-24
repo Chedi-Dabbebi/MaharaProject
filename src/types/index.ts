@@ -26,6 +26,7 @@ export interface UserProfile {
   name: string;
   email: string;
   initials: string;
+  avatar_url?: string;
   weekly_time_budget_minutes?: number;
 }
 
