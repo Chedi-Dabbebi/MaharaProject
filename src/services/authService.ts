@@ -4,6 +4,7 @@ import { Linking } from 'react-native';
 export interface AuthUser {
   id: string;
   email: string;
+  displayName?: string;
 }
 
 export interface AuthResult {
@@ -57,16 +58,17 @@ export async function signIn(email: string, password: string): Promise<AuthResul
   }
 
   if (data.user) {
+    const displayName = data.user.user_metadata?.display_name as string | undefined;
     return {
-      user: { id: data.user.id, email: data.user.email ?? email },
+      user: { id: data.user.id, email: data.user.email ?? email, displayName },
       error: null,
     };
   }
-  
+
   return { user: null, error: 'error_network' };
 }
 
-export async function signUp(email: string, password: string, displayName: string): Promise<AuthResult> {
+export async function signUp(email: string, password: string, name: string): Promise<AuthResult> {
   if (!isSupabaseConfigured) {
     return {
       user: { id: `local-${email}`, email },
@@ -79,23 +81,24 @@ export async function signUp(email: string, password: string, displayName: strin
     password,
     options: {
       data: {
-        display_name: displayName,
+        display_name: name,
       },
       emailRedirectTo: undefined,
     },
   });
 
   if (error) {
-    return { user: null, error: error.message }; 
+    return { user: null, error: error.message };
   }
 
   if (data.user) {
+    const displayName = data.user.user_metadata?.display_name as string | undefined;
     return {
-      user: { id: data.user.id, email: data.user.email ?? email },
-      error: null, 
+      user: { id: data.user.id, email: data.user.email ?? email, displayName },
+      error: null,
     };
   }
-  
+
   return { user: null, error: 'error_network' };
 }
 
@@ -184,8 +187,10 @@ export async function getCurrentAuthUser(): Promise<AuthUser | null> {
   if (!user) {
     return null;
   }
+  const displayName = user.user_metadata?.display_name as string | undefined;
   return {
     id: user.id,
     email: user.email ?? '',
+    displayName,
   };
 }

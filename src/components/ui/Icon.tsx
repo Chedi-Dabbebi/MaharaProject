@@ -7,6 +7,7 @@ export type IconName =
   | 'music'
   | 'camera'
   | 'fitness'
+  | 'code'
   | 'language'
   | 'home'
   | 'calendar'
@@ -59,6 +60,7 @@ const iconMap: Record<IconName, string> = {
   music: 'musical-notes',
   camera: 'camera-outline',
   fitness: 'barbell-outline',
+  code: 'code-slash-outline',
   language: 'language-outline',
   home: 'home-outline',
   calendar: 'calendar-outline',

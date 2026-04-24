@@ -21,7 +21,7 @@ Objectifs spécifiques :
 1. Musique : gammes, rythme, morceaux, improvisation
 2. Photographie : composition, lumière, portrait, retouche
 3. Fitness : renforcement musculaire, cardio, mobilité, récupération
-4. Langues : vocabulaire, compréhension orale, expression écrite, révision
+4. Programmation : logique, structures de contrôle, fonctions, résolution de problèmes
 Le système sera conçu de manière modulaire afin de permettre l’ajout futur de nouvelles compétences.
 
 
@@ -55,3 +55,4 @@ Le projet vise à démontrer des compétences techniques en développement mobil
   - `SUPABASE_OAUTH_REDIRECT_URL` (par défaut dans l'app : `projectapp://auth/callback`)
 - Pour Google/Facebook dans Supabase Auth, ajouter exactement la redirect URL Android :
   - `projectapp://auth/callback`
+- Appliquer les migrations Supabase, y compris `supabase/migrations/002_profiles_auth_trigger.sql`, pour créer automatiquement `profiles` lors d'un signup Auth.

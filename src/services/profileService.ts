@@ -31,8 +31,18 @@ function buildDisplayFromEmail(email: string) {
   };
 }
 
-export async function ensureProfile(userId: string, email: string): Promise<ProfileRecord> {
-  const names = buildDisplayFromEmail(email);
+export async function ensureProfile(
+  userId: string,
+  email: string,
+  displayName?: string,
+  initials?: string,
+): Promise<ProfileRecord> {
+  const names = displayName
+    ? {
+        displayName,
+        initials: initials ?? displayName.split(' ').map((w) => w[0]).join('').toUpperCase().slice(0, 2),
+      }
+    : buildDisplayFromEmail(email);
 
   if (!isSupabaseConfigured) {
     return {

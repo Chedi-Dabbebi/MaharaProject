@@ -66,7 +66,7 @@ export function PlanScreen() {
     );
   }
 
-  const planToShow = generatedPlan ?? createPlan(selectedSkill.id, difficulty);
+  const planToShow = generatedPlan;
   const weeklyTime = planToShow?.weeklyTime ?? '0 min';
   const sessionsPerWeek = planToShow?.sessionsPerWeek ?? 0;
   const plannedSessions = planToShow?.sessions ?? [];
@@ -92,12 +92,11 @@ export function PlanScreen() {
   };
 
   const handleValidate = () => {
-    const plan = generatedPlan ?? createPlan(selectedSkill.id, difficulty);
-    if (!plan) {
-      setStatusMessage(t('msg_no_plan_to_validate'));
+    if (!generatedPlan) {
+      setStatusMessage(t('msg_generate_before_validate'));
       return;
     }
-    acceptPlan(plan);
+    acceptPlan(generatedPlan);
     setStatusMessage(t('msg_plan_validated'));
   };
 

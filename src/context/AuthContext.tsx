@@ -40,10 +40,10 @@ interface AuthContextType {
 
 export const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-function toUserProfile(id: string, displayName: string, email: string, initials: string, avatarUrl?: string): UserProfile {
+function toUserProfile(id: string, name: string, email: string, initials: string, avatarUrl?: string): UserProfile {
   return {
     id,
-    name: displayName,
+    name,
     email,
     initials,
     avatar_url: avatarUrl,
@@ -55,8 +55,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<UserProfile | null>(null);
   const [onboardingComplete, setOnboardingComplete] = useState(false);
 
-  const applyAuthUser = useCallback(async (authUser: { id: string; email: string }) => {
-    const profile = await ensureProfile(authUser.id, authUser.email);
+  const applyAuthUser = useCallback(async (authUser: { id: string; email: string; displayName?: string }) => {
+    const profile = await ensureProfile(authUser.id, authUser.email, authUser.displayName);
     setUser(toUserProfile(profile.id, profile.display_name, profile.email, profile.initials, profile.avatar_url));
     await bootstrapSkillProgress(authUser.id, recalculateAllSkills(seedSkills));
   }, []);
@@ -106,9 +106,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (!nextUser.email) {
         return;
       }
+      const displayName = nextUser.user_metadata?.display_name as string | undefined;
       void applyAuthUser({
         id: nextUser.id,
         email: nextUser.email,
+        displayName,
       });
     });
 
@@ -215,7 +217,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         avatar_url: avatarUrl ?? prev.avatar_url
       } : prev);
       return { success: true, error: null };
-    } catch (e) {
+    } catch {
       return { success: false, error: 'Update failed' };
     }
   };
@@ -232,7 +234,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       await signOutCurrentUser();
       setUser(null);
       return { success: true, error: null };
-    } catch (e) {
+    } catch {
       return { success: false, error: 'Delete failed' };
     }
   };

@@ -55,11 +55,13 @@ export function SkillDetailScreen() {
 
   const onBack = () => navigation.goBack();
   const hasActiveSession = Boolean(activeSessions[skill.id]);
+  const hasValidatedPlan = Boolean(acceptedPlans[skill.id]);
   const plannedTaskOrder = acceptedPlans[skill.id]?.recommendedTaskIds ?? [];
   const plannedTasks = plannedTaskOrder
     .map((taskId) => skill.tasks.find((task) => task.id === taskId))
     .filter((task): task is NonNullable<typeof task> => Boolean(task));
-  const tasksToDisplay = plannedTasks.length > 0 ? plannedTasks : skill.tasks;
+  const tasksToDisplay = hasValidatedPlan ? (plannedTasks.length > 0 ? plannedTasks : skill.tasks) : [];
+  const isStartDisabled = !hasValidatedPlan && !hasActiveSession;
 
   const handleSessionPress = () => {
     const result = hasActiveSession ? completeSession(skill.id) : startSession(skill.id);
@@ -125,22 +127,28 @@ export function SkillDetailScreen() {
         <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>{t('skill_detail_tasks_week')}</Text>
 
         <View style={[styles.tasksContainer, { paddingBottom: tabBarHeight + 100 }]}>
-          {tasksToDisplay.map((task) => (
-            <TaskItem
-              key={task.id}
-              title={task.title}
-              duration={task.duration}
-              xp={task.xp}
-              completed={task.completed}
-              onToggle={() => toggleTaskCompletion(skill.id, task.id)}
-            />
-          ))}
+          {tasksToDisplay.length > 0 ? (
+            tasksToDisplay.map((task) => (
+              <TaskItem
+                key={task.id}
+                title={task.title}
+                duration={task.duration}
+                xp={task.xp}
+                completed={task.completed}
+                onToggle={() => toggleTaskCompletion(skill.id, task.id)}
+              />
+            ))
+          ) : (
+            <Text style={[styles.emptyTasksMessage, { color: colors.textSecondary }]}>
+              {t('skill_detail_plan_required')}
+            </Text>
+          )}
         </View>
       </ScrollView>
 
       {/* Floating Action Button */}
-      <View style={[styles.fabContainer, { bottom: tabBarHeight + 12 }]}>
-        <PrimaryButton onPress={handleSessionPress}>
+      <View style={[styles.fabContainer, { bottom: tabBarHeight + 24 }]}>
+        <PrimaryButton onPress={handleSessionPress} disabled={isStartDisabled}>
           {hasActiveSession ? t('skill_detail_btn_end') : t('skill_detail_btn_start')}
         </PrimaryButton>
         {sessionMessage ? <Text style={[styles.sessionMessage, { color: colors.textSecondary }]}>{sessionMessage}</Text> : null}
@@ -234,6 +242,10 @@ const styles = StyleSheet.create({
   tasksContainer: {
     paddingHorizontal: 20,
     gap: 16,
+  },
+  emptyTasksMessage: {
+    fontSize: 13,
+    lineHeight: 20,
   },
   fabContainer: {
     position: 'absolute',

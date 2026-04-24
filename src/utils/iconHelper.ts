@@ -9,6 +9,7 @@ export const getIconName = (iconName: string): IconName => {
     camera: 'camera',
     dumbbell: 'fitness',
     translate: 'language',
+    code: 'code',
   };
   return iconMap[iconName] || 'star';
 };
@@ -22,6 +23,7 @@ export const getIconEmoji = (iconName: string): string => {
     camera: '📷',
     dumbbell: '🏋️',
     translate: '🌐',
+    code: '💻',
   };
   return iconMap[iconName] || '⭐';
 };
