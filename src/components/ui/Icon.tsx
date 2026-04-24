@@ -47,7 +47,10 @@ export type IconName =
   | 'edit'
   | 'alert-triangle'
   | 'chevron-left'
-  | 'chevron-back';
+  | 'chevron-back'
+  | 'play'
+  | 'pause'
+  | 'play-circle';
 
 interface IconProps {
   name: IconName;
@@ -101,6 +104,9 @@ const iconMap: Record<IconName, string> = {
   'alert-triangle': 'alert-circle-outline',
   'chevron-left': 'chevron-back-outline',
   'chevron-back': 'chevron-back-outline',
+  play: 'play-outline',
+  pause: 'pause-outline',
+  'play-circle': 'logo-youtube',
 };
 
 export function Icon({ name, size = 24, color, style }: IconProps) {

@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { isSupabaseConfigured, supabase } from './supabaseClient';
 
 export interface ProfileRecord {

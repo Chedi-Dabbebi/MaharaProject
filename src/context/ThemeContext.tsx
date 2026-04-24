@@ -31,6 +31,10 @@ interface ThemeColors {
   buttonPrimary: string;
   inputBackground: string;
   inputBorder: string;
+  // Extra tokens used by older components
+  xp: string;
+  text: string;
+  buttonText: string;
 }
 
 const darkTheme: ThemeColors = {
@@ -62,6 +66,9 @@ const darkTheme: ThemeColors = {
   buttonPrimary: '#6366F1',
   inputBackground: '#0F141C',
   inputBorder: 'rgba(255, 255, 255, 0.08)',
+  xp: '#F59E0B',
+  text: '#F1F5F9',
+  buttonText: '#FFFFFF',
 };
 
 const lightTheme: ThemeColors = {
@@ -93,6 +100,9 @@ const lightTheme: ThemeColors = {
   buttonPrimary: '#6366F1',
   inputBackground: '#F8FAFC',
   inputBorder: '#E2E8F0',
+  xp: '#F59E0B',
+  text: '#0F172A',
+  buttonText: '#FFFFFF',
 };
 
 interface ThemeContextType {

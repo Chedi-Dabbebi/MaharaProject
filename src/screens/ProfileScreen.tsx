@@ -340,7 +340,7 @@ export function ProfileScreen() {
 
   const earnedCount = achievements.filter((a) => a.earned).length;
 
-  const profile = user ?? {
+  const profile: { name: string; email: string; initials: string; avatar_url?: string } = user ?? {
     name: t('common_user'),
     email: t('common_unknown'),
     initials: 'U',

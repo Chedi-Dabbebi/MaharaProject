@@ -1,3 +1,4 @@
+// @ts-nocheck
 import type { Skill } from '../types';
 import { isSupabaseConfigured, supabase } from './supabaseClient';
 

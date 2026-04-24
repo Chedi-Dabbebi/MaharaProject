@@ -1,3 +1,4 @@
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import type { Skill, GeneratedPlan } from '../types';
 
 export interface PersistedUser {
@@ -5,6 +6,7 @@ export interface PersistedUser {
   name: string;
   email: string;
   initials: string;
+  avatar_url?: string;
 }
 
 export interface PersistedAppState {
@@ -16,27 +18,52 @@ export interface PersistedAppState {
 }
 
 const STORAGE_SCHEMA_VERSION = 1;
+const STORAGE_KEY = '@app_state';
 
-declare global {
-  // eslint-disable-next-line no-var
-  var __MAHARA_APP_STATE__: PersistedAppState | undefined;
-}
+// In-memory cache of the current persisted state to avoid redundant reads
+let stateCache: PersistedAppState | null = null;
+// Serialized write queue to prevent race conditions
+let saveQueue: Promise<void> = Promise.resolve();
 
 export function getStorageSchemaVersion(): number {
   return STORAGE_SCHEMA_VERSION;
 }
 
 export async function loadPersistedAppState(): Promise<PersistedAppState | null> {
-  const snapshot = globalThis.__MAHARA_APP_STATE__;
-  if (!snapshot) {
+  try {
+    if (stateCache) return stateCache;
+    const jsonValue = await AsyncStorage.getItem(STORAGE_KEY);
+    if (!jsonValue) return null;
+    const snapshot = JSON.parse(jsonValue) as PersistedAppState;
+    if (snapshot.schemaVersion !== STORAGE_SCHEMA_VERSION) {
+      return null;
+    }
+    stateCache = snapshot;
+    return snapshot;
+  } catch (e) {
+    console.error('Error loading state', e);
     return null;
   }
-  if (snapshot.schemaVersion !== STORAGE_SCHEMA_VERSION) {
-    return null;
-  }
-  return snapshot;
 }
 
-export async function savePersistedAppState(state: PersistedAppState): Promise<void> {
-  globalThis.__MAHARA_APP_STATE__ = state;
+export async function savePersistedAppState(state: Partial<PersistedAppState>): Promise<void> {
+  // Chain saves sequentially to prevent race conditions
+  saveQueue = saveQueue.then(async () => {
+    try {
+      const existing = stateCache;
+      const mergedState: PersistedAppState = {
+        schemaVersion: STORAGE_SCHEMA_VERSION,
+        skills: state.skills ?? existing?.skills ?? [],
+        user: state.user !== undefined ? state.user : (existing?.user ?? null),
+        acceptedPlans: state.acceptedPlans ?? existing?.acceptedPlans ?? {},
+        activeSessions: state.activeSessions ?? existing?.activeSessions ?? {},
+      };
+      // Update cache first so subsequent saves in queue see the latest state
+      stateCache = mergedState;
+      await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(mergedState));
+    } catch (e) {
+      console.error('Error saving state', e);
+    }
+  });
+  return saveQueue;
 }

@@ -48,9 +48,8 @@ function preferredXp(taskXp: number, difficulty: Difficulty): number {
 }
 
 export function generatePlan(skill: Skill, difficulty: Difficulty): GeneratedPlan {
-  const progressModifier = skill.progress < 40 ? 1 : 0;
-  const sessionsPerWeek = baseSessions[difficulty] + progressModifier;
-  const targetWeeklyMinutes = baseMinutes[difficulty] + progressModifier * 30;
+  const sessionsPerDay = baseSessions[difficulty];
+  const targetDailyMinutes = baseMinutes[difficulty];
 
   const orderedTasks = [...skill.tasks].sort((a, b) => {
     if (a.completed !== b.completed) {
@@ -63,17 +62,16 @@ export function generatePlan(skill: Skill, difficulty: Difficulty): GeneratedPla
 
   const uniqueRecommendedTasks = orderedTasks.slice(
     0,
-    Math.min(sessionsPerWeek, orderedTasks.length),
+    Math.min(sessionsPerDay, orderedTasks.length),
   );
   const recommendedTaskIds = uniqueRecommendedTasks.map((task) => task.id);
 
-  const weekDays = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'];
   const sessions: PlannedSession[] = [];
   let totalMinutes = 0;
-  for (let index = 0; index < sessionsPerWeek; index += 1) {
+  for (let index = 0; index < sessionsPerDay; index += 1) {
     const task = uniqueRecommendedTasks[index % uniqueRecommendedTasks.length];
     sessions.push({
-      dayLabel: weekDays[index % weekDays.length],
+      dayLabel: `Tâche ${index + 1}`,
       taskId: task.id,
       taskTitle: task.title,
       duration: task.duration,
@@ -82,7 +80,7 @@ export function generatePlan(skill: Skill, difficulty: Difficulty): GeneratedPla
     totalMinutes += parseMinutes(task.duration);
   }
 
-  const weeklyMinutes = totalMinutes > 0 ? totalMinutes : targetWeeklyMinutes;
+  const dailyMinutes = totalMinutes > 0 ? totalMinutes : targetDailyMinutes;
 
   const completionCount = uniqueRecommendedTasks.filter((task) => task.completed).length;
   const completedHint =
@@ -93,10 +91,10 @@ export function generatePlan(skill: Skill, difficulty: Difficulty): GeneratedPla
   return {
     skillId: skill.id,
     difficulty,
-    sessionsPerWeek,
-    weeklyTime: toReadableTime(weeklyMinutes),
+    sessionsPerWeek: sessionsPerDay,
+    weeklyTime: toReadableTime(dailyMinutes),
     recommendedTaskIds,
     sessions,
-    summary: `Plan ${difficulty}: ${sessionsPerWeek} séances pour ${skill.name} (${toReadableTime(weeklyMinutes)}). ${completedHint}`,
+    summary: `Plan ${difficulty}: ${sessionsPerDay} tâches pour ${skill.name} (${toReadableTime(dailyMinutes)}). ${completedHint}`,
   };
 }

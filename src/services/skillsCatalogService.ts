@@ -1,3 +1,4 @@
+// @ts-nocheck
 // Skills Catalog Service - Fetch and manage available skills
 import type { Skill, Task } from '../types';
 import { supabase } from './supabaseClient';

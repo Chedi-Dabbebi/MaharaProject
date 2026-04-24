@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState } from 'react';
 import { generatePlan } from '../logic/planGenerator';
 import { acceptLatestPlanForSkill, saveDraftPlan as persistDraftPlan } from '../services/plansRepository';
 import { completeLatestSessionRun, createSessionRun } from '../services/sessionRunsRepository';
+import { loadPersistedAppState, savePersistedAppState } from '../services/appStorage';
 import { useAuth } from '../hooks/useAuth';
 import { useSkills } from '../hooks/useSkills';
 import type { Difficulty, GeneratedPlan } from '../types';
@@ -23,6 +24,26 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
   const { skills, toggleTaskCompletion } = useSkills();
   const [acceptedPlans, setAcceptedPlans] = useState<Record<string, GeneratedPlan>>({});
   const [activeSessions, setActiveSessions] = useState<Record<string, { startedAt: string }>>({});
+  const [isLoaded, setIsLoaded] = useState(false);
+
+  React.useEffect(() => {
+    loadPersistedAppState().then(state => {
+      if (state) {
+        if (state.acceptedPlans) setAcceptedPlans(state.acceptedPlans);
+        if (state.activeSessions) setActiveSessions(state.activeSessions);
+      }
+      setIsLoaded(true);
+    });
+  }, []);
+
+  React.useEffect(() => {
+    if (isLoaded) {
+      void savePersistedAppState({
+        acceptedPlans,
+        activeSessions,
+      });
+    }
+  }, [acceptedPlans, activeSessions, isLoaded]);
 
   const createPlan = (skillId: string, difficulty: Difficulty): GeneratedPlan | null => {
     const targetSkill = skills.find((skill) => skill.id === skillId);

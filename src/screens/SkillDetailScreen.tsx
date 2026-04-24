@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -6,6 +6,7 @@ import {
   ScrollView,
   TouchableOpacity,
   StatusBar,
+  Animated,
 } from 'react-native';
 import { LevelBadge } from '../components/ui/LevelBadge';
 import { ProgressBar } from '../components/ui/ProgressBar';
@@ -23,18 +24,18 @@ import type { RouteProp } from '@react-navigation/native';
 import type { HomeStackParamList } from '../types/navigation';
 import { LoadingState } from '../components/ui/LoadingState';
 import { ErrorState } from '../components/ui/ErrorState';
+import { getQuestionsForTaskIds, generateQuiz } from '../logic/quizHelpers';
 
 export function SkillDetailScreen() {
   const route = useRoute<RouteProp<HomeStackParamList, 'SkillDetail'>>();
   const navigation = useNavigation();
-  const { toggleTaskCompletion, getSkillById, isLoading } = useSkills();
+  const { toggleTaskCompletion, getSkillById, isLoading, skills } = useSkills();
   const skill = getSkillById(route.params.skillId);
   const { colors, theme } = useTheme();
 
-  const { activeSessions, acceptedPlans, startSession, completeSession } = useSession();
+  const { activeSessions, acceptedPlans } = useSession();
   const tabBarHeight = useBottomTabBarHeight();
   const { t } = useTranslation();
-  const [sessionMessage, setSessionMessage] = useState('');
   const isDark = theme === 'dark';
 
   if (isLoading && !skill) {
@@ -61,11 +62,49 @@ export function SkillDetailScreen() {
     .map((taskId) => skill.tasks.find((task) => task.id === taskId))
     .filter((task): task is NonNullable<typeof task> => Boolean(task));
   const tasksToDisplay = hasValidatedPlan ? (plannedTasks.length > 0 ? plannedTasks : skill.tasks) : [];
-  const isStartDisabled = !hasValidatedPlan && !hasActiveSession;
 
-  const handleSessionPress = () => {
-    const result = hasActiveSession ? completeSession(skill.id) : startSession(skill.id);
-    setSessionMessage(result.message);
+  const allTasksCompleted = tasksToDisplay.length > 0 && tasksToDisplay.every(task => task.completed);
+  const bounceValue = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    if (allTasksCompleted) {
+      Animated.spring(bounceValue, {
+        toValue: 1,
+        friction: 5,
+        tension: 40,
+        useNativeDriver: true,
+      }).start();
+    } else {
+      bounceValue.setValue(0);
+    }
+  }, [allTasksCompleted, bounceValue]);
+
+  const handleQuizPress = () => {
+    try {
+      if (!skill) return;
+
+      // The quiz button is only visible when ALL plan tasks are completed.
+      // So tasksToDisplay are guaranteed to all be completed at this point.
+      const taskIds = tasksToDisplay.map(t => t.id);
+
+      console.log('DEBUG [Quiz System] - Number of completed tasks:', taskIds.length);
+      console.log('DEBUG [Quiz System] - Task IDs used:', taskIds);
+
+      // Get all questions linked to these task IDs
+      const questions = getQuestionsForTaskIds(taskIds);
+      console.log('DEBUG [Quiz System] - Number of questions retrieved:', questions.length);
+
+      // Generate the 10-question quiz
+      const quiz = generateQuiz(questions);
+      console.log('DEBUG [Quiz System] - Number of questions in final quiz:', quiz.questions.length);
+
+      if (quiz && quiz.questions.length > 0) {
+        // @ts-ignore
+        navigation.navigate('QuizScreen', { quiz });
+      }
+    } catch (e) {
+      console.warn('Failed to start quiz safely:', e);
+    }
   };
 
   return (
@@ -135,6 +174,8 @@ export function SkillDetailScreen() {
                 duration={task.duration}
                 xp={task.xp}
                 completed={task.completed}
+                prompt={task.prompt}
+                items={task.items}
                 onToggle={() => toggleTaskCompletion(skill.id, task.id)}
               />
             ))
@@ -147,12 +188,29 @@ export function SkillDetailScreen() {
       </ScrollView>
 
       {/* Floating Action Button */}
-      <View style={[styles.fabContainer, { bottom: tabBarHeight + 24 }]}>
-        <PrimaryButton onPress={handleSessionPress} disabled={isStartDisabled}>
-          {hasActiveSession ? t('skill_detail_btn_end') : t('skill_detail_btn_start')}
-        </PrimaryButton>
-        {sessionMessage ? <Text style={[styles.sessionMessage, { color: colors.textSecondary }]}>{sessionMessage}</Text> : null}
-      </View>
+      {allTasksCompleted && (
+        <Animated.View 
+          style={[
+            styles.fabContainer, 
+            { 
+              bottom: tabBarHeight + 24,
+              transform: [
+                { scale: bounceValue },
+                { translateY: bounceValue.interpolate({
+                    inputRange: [0, 1],
+                    outputRange: [50, 0]
+                  })
+                }
+              ],
+              opacity: bounceValue,
+            }
+          ]}
+        >
+          <PrimaryButton onPress={handleQuizPress}>
+            {t('skill_detail_btn_quiz')}
+          </PrimaryButton>
+        </Animated.View>
+      )}
     </View>
   );
 }

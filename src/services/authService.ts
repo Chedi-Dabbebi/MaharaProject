@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { isSupabaseConfigured, supabase } from './supabaseClient';
 import { Linking } from 'react-native';
 

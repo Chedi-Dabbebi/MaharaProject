@@ -1,4 +1,5 @@
 import { NavigatorScreenParams } from '@react-navigation/native';
+import type { Quiz } from './quiz';
 
 export type AuthStackParamList = {
   Login: undefined;
@@ -16,6 +17,8 @@ export type OnboardingStackParamList = {
 export type HomeStackParamList = {
   HomeMain: undefined;
   SkillDetail: { skillId: string };
+  QuizScreen: { quiz: Quiz };
+  QuizResultScreen: { quiz: Quiz; userAnswers: (number | null)[] };
 };
 
 export type ProfileStackParamList = {

@@ -54,11 +54,7 @@ export function SkillsProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     void savePersistedAppState({
-      schemaVersion: 1,
       skills,
-      user: null,
-      acceptedPlans: {},
-      activeSessions: {},
     });
   }, [skills]);
 
