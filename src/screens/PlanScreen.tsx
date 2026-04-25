@@ -22,6 +22,7 @@ import { generatePlanWithAI } from '../services/aiPlanService';
 import { LoadingState } from '../components/ui/LoadingState';
 import { EmptyState } from '../components/ui/EmptyState';
 import { ErrorState } from '../components/ui/ErrorState';
+import { FadeInView } from '../components/ui/FadeInView';
 
 export function PlanScreen() {
   const { colors, theme } = useTheme();
@@ -108,12 +109,13 @@ export function PlanScreen() {
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingBottom: insets.bottom + 120 }}
       >
-        <View style={styles.header}>
-          <Text style={[styles.title, { color: colors.textPrimary }]}>{t('plan_title')}</Text>
-          <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
-            {t('plan_subtitle')}
-          </Text>
-        </View>
+        <FadeInView>
+          <View style={styles.header}>
+            <Text style={[styles.title, { color: colors.textPrimary }]}>{t('plan_title')}</Text>
+            <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
+              {t('plan_subtitle')}
+            </Text>
+          </View>
 
         {/* Skill Selection */}
         <View style={[styles.card, { backgroundColor: colors.cardBackground, borderColor: colors.cardBorder }]}>
@@ -279,6 +281,7 @@ export function PlanScreen() {
         {statusMessage ? (
           <Text style={[styles.statusMessage, { color: colors.textSecondary }]}>{statusMessage}</Text>
         ) : null}
+        </FadeInView>
       </ScrollView>
     </View>
   );

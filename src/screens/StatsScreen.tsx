@@ -16,6 +16,7 @@ import { useTranslation } from '../i18n';
 import { LoadingState } from '../components/ui/LoadingState';
 import { EmptyState } from '../components/ui/EmptyState';
 import { ErrorState } from '../components/ui/ErrorState';
+import { FadeInView } from '../components/ui/FadeInView';
 
 export function StatsScreen() {
   const { colors, theme } = useTheme();
@@ -69,10 +70,11 @@ export function StatsScreen() {
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingBottom: Math.max(insets.bottom + 100, 120) }}
       >
-        <View style={styles.header}>
-          <Text style={[styles.title, { color: colors.textPrimary }]}>{t('stats_title')}</Text>
-          <Text style={[styles.subtitle, { color: colors.textSecondary }]}>{t('stats_subtitle')}</Text>
-        </View>
+        <FadeInView>
+          <View style={styles.header}>
+            <Text style={[styles.title, { color: colors.textPrimary }]}>{t('stats_title')}</Text>
+            <Text style={[styles.subtitle, { color: colors.textSecondary }]}>{t('stats_subtitle')}</Text>
+          </View>
 
         {/* Total XP Card */}
         <View style={[styles.xpCard, { backgroundColor: colors.primary }]}>
@@ -161,7 +163,8 @@ export function StatsScreen() {
               </View>
             ))}
           </View>
-        </View>
+          </View>
+        </FadeInView>
       </ScrollView>
     </View>
   );

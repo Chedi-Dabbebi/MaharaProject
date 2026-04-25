@@ -11,7 +11,6 @@ export type AuthStackParamList = {
 export type OnboardingStackParamList = {
   OnboardingWelcome: undefined;
   OnboardingLanguage: undefined;
-  OnboardingSetup: undefined;
 };
 
 export type HomeStackParamList = {

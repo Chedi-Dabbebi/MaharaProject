@@ -263,7 +263,7 @@ export function SettingsScreen() {
         </View>
 
         <View style={styles.appInfoSection}>
-            <Text style={[styles.versionText, { color: colors.textTertiary }]}>Android Flaw v{APP_VERSION}</Text>
+            <Text style={[styles.versionText, { color: colors.textTertiary }]}>Mahara v{APP_VERSION}</Text>
         </View>
 
         <View style={{ height: 40 }} />

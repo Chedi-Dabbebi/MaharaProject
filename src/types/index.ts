@@ -1,4 +1,4 @@
-// Domain type definitions for the Android Flaw application
+// Domain type definitions for the Mahara application
 
 export type Difficulty = 'facile' | 'moyen' | 'difficile';
 

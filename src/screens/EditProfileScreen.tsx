@@ -12,6 +12,7 @@ import {
   Animated,
   Image,
   ActivityIndicator,
+  Alert,
 } from 'react-native';
 import { launchImageLibrary } from 'react-native-image-picker';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -20,8 +21,6 @@ import { useAuth } from '../hooks/useAuth';
 import { useTranslation } from '../i18n';
 import { useNavigation } from '@react-navigation/native';
 import { Icon } from '../components/ui/Icon';
-
-const BUDGET_OPTIONS = [30, 60, 90, 120, 180, 240];
 
 function buildInitials(name: string): string {
   const words = name.trim().split(/\s+/).filter(Boolean);
@@ -36,19 +35,14 @@ export function EditProfileScreen() {
   const navigation = useNavigation();
   const isDark = theme === 'dark';
 
-  const initialBudget = user?.weekly_time_budget_minutes ?? 60;
-  const initialBudgetIndex = Math.max(0, BUDGET_OPTIONS.indexOf(initialBudget));
-
   const [displayName, setDisplayName] = useState(user?.name ?? '');
   const [avatarUrl, setAvatarUrl] = useState(user?.avatar_url ?? '');
-  const [budgetIndex, setBudgetIndex] = useState(initialBudgetIndex);
   const [isSaving, setIsSaving] = useState(false);
   const [saveError, setSaveError] = useState('');
   const [nameFocused, setNameFocused] = useState(false);
   const insets = useSafeAreaInsets();
 
   const initials = buildInitials(displayName) || user?.initials || '?';
-  const budget = BUDGET_OPTIONS[budgetIndex];
 
   // Animations
   const avatarScale = useRef(new Animated.Value(1)).current;
@@ -91,10 +85,14 @@ export function EditProfileScreen() {
     if (!displayName.trim()) return;
     setSaveError('');
     setIsSaving(true);
-    const { success, error } = await updateUser(displayName.trim(), initials, budget, avatarUrl);
+    console.log('[EditProfile] handleSave → calling updateUser', { displayName, initials, avatarUrl });
+    const { success, error } = await updateUser(displayName.trim(), initials, user?.weekly_time_budget_minutes || 60, avatarUrl);
+    console.log('[EditProfile] updateUser result:', { success, error });
     setIsSaving(false);
     if (!success) {
-      setSaveError(error ?? t('edit_profile_save_error'));
+      const msg = error ?? t('edit_profile_save_error');
+      setSaveError(msg);
+      Alert.alert('Save failed', msg);
       return;
     }
     navigation.goBack();
@@ -194,68 +192,6 @@ export function EditProfileScreen() {
                   editable={!isSaving}
                   autoCapitalize="words"
                 />
-              </View>
-            </View>
-
-            {/* ── Weekly Budget ────────────────────────────────── */}
-            <View style={styles.field}>
-              <Text style={[styles.label, { color: colors.textPrimary }]}>{t('edit_profile_budget_label')}</Text>
-              <View style={[styles.budgetCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-                {/* Minus */}
-                <TouchableOpacity
-                  style={[
-                    styles.budgetStepBtn,
-                    {
-                      backgroundColor: colors.surfaceElevated,
-                      borderColor: colors.border,
-                      opacity: budgetIndex === 0 ? 0.4 : 1,
-                    },
-                  ]}
-                  onPress={() => setBudgetIndex((i) => Math.max(0, i - 1))}
-                  disabled={isSaving || budgetIndex === 0}
-                >
-                  <Text style={[styles.stepBtnText, { color: colors.textPrimary }]}>−</Text>
-                </TouchableOpacity>
-
-                {/* Value */}
-                <View style={styles.budgetCenter}>
-                  <Text style={[styles.budgetValue, { color: colors.textPrimary }]}>{budget}</Text>
-                  <Text style={[styles.budgetUnit, { color: colors.textSecondary }]}>
-                    {t('edit_profile_budget_unit')}
-                  </Text>
-                </View>
-
-                {/* Plus */}
-                <TouchableOpacity
-                  style={[
-                    styles.budgetStepBtn,
-                    {
-                      backgroundColor: colors.surfaceElevated,
-                      borderColor: colors.border,
-                      opacity: budgetIndex === BUDGET_OPTIONS.length - 1 ? 0.4 : 1,
-                    },
-                  ]}
-                  onPress={() => setBudgetIndex((i) => Math.min(BUDGET_OPTIONS.length - 1, i + 1))}
-                  disabled={isSaving || budgetIndex === BUDGET_OPTIONS.length - 1}
-                >
-                  <Text style={[styles.stepBtnText, { color: colors.textPrimary }]}>+</Text>
-                </TouchableOpacity>
-              </View>
-
-              {/* Pill progress */}
-              <View style={styles.budgetDots}>
-                {BUDGET_OPTIONS.map((_, i) => (
-                  <View
-                    key={i}
-                    style={[
-                      styles.dot,
-                      {
-                        backgroundColor: i === budgetIndex ? colors.primary : colors.border,
-                        width: i === budgetIndex ? 18 : 6,
-                      },
-                    ]}
-                  />
-                ))}
               </View>
             </View>
 
@@ -383,35 +319,7 @@ const styles = StyleSheet.create({
   },
   input: { flex: 1, fontSize: 16, fontWeight: '500' },
 
-  // Budget
-  budgetCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    borderRadius: 20,
-    borderWidth: 1,
-    padding: 16,
-    justifyContent: 'space-between',
-  },
-  budgetStepBtn: {
-    width: 48,
-    height: 48,
-    borderRadius: 16,
-    borderWidth: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  stepBtnText: { fontSize: 24, fontWeight: '700', lineHeight: 28 },
-  budgetCenter: { alignItems: 'center', flex: 1 },
-  budgetValue: { fontSize: 36, fontWeight: '800', letterSpacing: -1 },
-  budgetUnit: { fontSize: 12, fontWeight: '500', marginTop: 2 },
-  budgetDots: {
-    flexDirection: 'row',
-    gap: 6,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginTop: 14,
-  },
-  dot: { height: 6, borderRadius: 99 },
+  input: { flex: 1, fontSize: 16, fontWeight: '500' },
 
   // Error
   errorBox: {

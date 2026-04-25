@@ -7,9 +7,12 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { OnboardingStackParamList } from '../types/navigation';
 import { Icon } from '../components/ui/Icon';
 
+import { useAuth } from '../hooks/useAuth';
+
 export function OnboardingLanguage() {
   const { colors } = useTheme();
   const { t, language, setLanguage } = useTranslation();
+  const { completeOnboarding } = useAuth();
   const navigation = useNavigation<NativeStackNavigationProp<OnboardingStackParamList>>();
 
   const languages = [
@@ -62,7 +65,7 @@ export function OnboardingLanguage() {
       <View style={styles.footer}>
         <TouchableOpacity
           style={[styles.button, { backgroundColor: colors.buttonPrimary }]}
-          onPress={() => navigation.navigate('OnboardingSetup')}
+          onPress={completeOnboarding}
         >
           <Text style={styles.buttonText}>{t('onboarding_btn_continue')}</Text>
         </TouchableOpacity>

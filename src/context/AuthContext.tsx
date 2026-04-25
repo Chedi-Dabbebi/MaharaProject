@@ -15,7 +15,7 @@ import {
   handleAuthDeepLink,
   type AuthProvider,
 } from '../services/authService';
-import { ensureProfile, updateProfileBudget } from '../services/profileService';
+import { ensureProfile } from '../services/profileService';
 import { supabase, isSupabaseConfigured } from '../services/supabaseClient';
 import { bootstrapSkillProgress } from '../services/progressRepository';
 import { recalculateAllSkills } from '../logic/progression';
@@ -40,13 +40,21 @@ interface AuthContextType {
 
 export const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-function toUserProfile(id: string, name: string, email: string, initials: string, avatarUrl?: string): UserProfile {
+function toUserProfile(
+  id: string,
+  name: string,
+  email: string,
+  initials: string,
+  avatarUrl?: string,
+  weeklyBudgetMinutes?: number,
+): UserProfile {
   return {
     id,
     name,
     email,
     initials,
     avatar_url: avatarUrl,
+    weekly_time_budget_minutes: weeklyBudgetMinutes,
   };
 }
 
@@ -57,7 +65,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const applyAuthUser = useCallback(async (authUser: { id: string; email: string; displayName?: string }) => {
     const profile = await ensureProfile(authUser.id, authUser.email, authUser.displayName);
-    setUser(toUserProfile(profile.id, profile.display_name, profile.email, profile.initials, profile.avatar_url));
+    setUser(toUserProfile(
+      profile.id,
+      profile.display_name,
+      profile.email,
+      profile.initials,
+      profile.avatar_url,
+      profile.weekly_time_budget_minutes,
+    ));
     await bootstrapSkillProgress(authUser.id, recalculateAllSkills(seedSkills));
   }, []);
 
@@ -191,31 +206,48 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const updateUser = async (displayName: string, initials: string, budgetMinutes: number, avatarUrl?: string): Promise<{ success: boolean; error: string | null }> => {
-    if (!user?.id) return { success: false, error: 'Not authenticated' };
+    console.log('[updateUser] called', { userId: user?.id, displayName, initials, budgetMinutes, avatarUrl, isSupabaseConfigured });
+    if (!user?.id) {
+      console.log('[updateUser] FAIL: no user id');
+      return { success: false, error: 'Not authenticated' };
+    }
     try {
       if (isSupabaseConfigured) {
+        // Build payload — only include avatar_url when the column exists (migration 004)
+        const payload: Record<string, unknown> = {
+          display_name: displayName,
+          initials,
+          weekly_time_budget_minutes: budgetMinutes,
+        };
+        if (avatarUrl) {
+          payload.avatar_url = avatarUrl;
+        }
+        console.log('[updateUser] sending Supabase update', payload);
         // @ts-ignore – Supabase SDK types mismatch with installed version
         const { error } = await (supabase as any)
           .from('profiles')
-          .update({
-            display_name: displayName,
-            initials,
-            weekly_time_budget_minutes: budgetMinutes,
-            avatar_url: avatarUrl,
-          })
+          .update(payload)
           .eq('id', user.id);
+        console.log('[updateUser] Supabase result error:', error);
         if (error) return { success: false, error: error.message };
+      } else {
+        console.log('[updateUser] Supabase not configured — skipping DB write');
       }
-      await updateProfileBudget(user.id, budgetMinutes);
-      setUser(prev => prev ? {
-        ...prev,
+      // Update local state immediately (no second Supabase write needed)
+      const updatedUser: UserProfile = {
+        ...user,
         name: displayName,
         initials,
         weekly_time_budget_minutes: budgetMinutes,
-        avatar_url: avatarUrl ?? prev.avatar_url
-      } : prev);
+        avatar_url: avatarUrl ?? user.avatar_url,
+      };
+      setUser(updatedUser);
+      // Persist so changes survive a cold restart
+      await savePersistedAppState({ user: updatedUser });
+      console.log('[updateUser] SUCCESS');
       return { success: true, error: null };
-    } catch {
+    } catch (e) {
+      console.log('[updateUser] EXCEPTION', e);
       return { success: false, error: 'Update failed' };
     }
   };

@@ -11,6 +11,7 @@ import type { HomeStackParamList } from '../types/navigation';
 import { LoadingSkeleton } from '../components/ui/LoadingSkeleton';
 import { ErrorState } from '../components/ui/ErrorState';
 import { EmptyState } from '../components/ui/EmptyState';
+import { FadeInView } from '../components/ui/FadeInView';
 
 export function HomeScreen() {
   const { colors, theme } = useTheme();
@@ -58,42 +59,44 @@ export function HomeScreen() {
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} />
 
-      <View style={styles.headerContainer}>
-        <Text style={[styles.header, { color: colors.textPrimary }]}>
-          {t('home_hello', { name: displayName })}
-        </Text>
-        <Text style={[styles.subHeader, { color: colors.textSecondary }]}>
-          {t('home_subtitle')}
-        </Text>
-      </View>
+      <FadeInView style={{ flex: 1 }}>
+        <View style={styles.headerContainer}>
+          <Text style={[styles.header, { color: colors.textPrimary }]}>
+            {t('home_hello', { name: displayName })}
+          </Text>
+          <Text style={[styles.subHeader, { color: colors.textSecondary }]}>
+            {t('home_subtitle')}
+          </Text>
+        </View>
 
-      {skills.length === 0 ? (
-        <EmptyState
-          title={t('home_empty_title')}
-          subtitle={t('home_empty_subtitle')}
-          actionLabel={t('home_empty_action')}
-          onAction={() => {/* future: open skill browser */}}
-        />
-      ) : (
-        <FlatList
-          data={skills}
-          keyExtractor={(item) => item.id}
-          renderItem={({ item }) => (
-            <SkillCard
-              id={item.id}
-              name={item.name}
-              icon={item.icon}
-              color={item.color}
-              progress={item.progress}
-              level={item.level}
-              onPress={() => navigation.navigate('SkillDetail', { skillId: item.id })}
-            />
-          )}
-          contentContainerStyle={styles.listContent}
-          numColumns={2}
-          columnWrapperStyle={styles.row}
-        />
-      )}
+        {skills.length === 0 ? (
+          <EmptyState
+            title={t('home_empty_title')}
+            subtitle={t('home_empty_subtitle')}
+            actionLabel={t('home_empty_action')}
+            onAction={() => {/* future: open skill browser */}}
+          />
+        ) : (
+          <FlatList
+            data={skills}
+            keyExtractor={(item) => item.id}
+            renderItem={({ item }) => (
+              <SkillCard
+                id={item.id}
+                name={item.name}
+                icon={item.icon}
+                color={item.color}
+                progress={item.progress}
+                level={item.level}
+                onPress={() => navigation.navigate('SkillDetail', { skillId: item.id })}
+              />
+            )}
+            contentContainerStyle={styles.listContent}
+            numColumns={2}
+            columnWrapperStyle={styles.row}
+          />
+        )}
+      </FadeInView>
     </View>
   );
 }

@@ -434,7 +434,6 @@ export function ProfileScreen() {
         <View style={styles.statsRow}>
           <StatCard value={`${totalXP}`} label={t('profile_total_xp')} color={colors.primary} delay={0} />
           <StatCard value={`${totalCompletedTasks}`} label={t('profile_sessions')} color={colors.secondary} delay={80} />
-          <StatCard value={weeklyBudget} label={t('profile_weekly_budget')} color={colors.accent} delay={160} />
         </View>
 
         {/* ── Achievements ──────────────────────────────────────── */}

@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity, Image } from 'react-native';
 import { useTheme } from '../context/ThemeContext';
 import { useTranslation } from '../i18n';
 import { Icon } from '../components/ui/Icon';
@@ -16,9 +16,11 @@ export function OnboardingWelcome() {
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
       <View style={styles.content}>
         <View style={styles.logoContainer}>
-          <View style={[styles.iconWrapper, { backgroundColor: 'rgba(99, 102, 241, 0.1)' }]}>
-            <Icon name="fire" size={80} color="#6366F1" />
-          </View>
+          <Image 
+            source={require('../assets/logo_main.png')} 
+            style={styles.logo}
+            resizeMode="contain"
+          />
         </View>
 
         <Text style={[styles.title, { color: colors.textPrimary }]}>
@@ -54,18 +56,16 @@ const styles = StyleSheet.create({
   logoContainer: {
     marginBottom: 40,
   },
-  iconWrapper: {
-    width: 160,
-    height: 160,
-    borderRadius: 80,
-    justifyContent: 'center',
-    alignItems: 'center',
+  logo: {
+    width: 200,
+    height: 200,
   },
   title: {
-    fontSize: 28,
-    fontWeight: 'bold',
+    fontSize: 26,
+    fontWeight: '600',
     textAlign: 'center',
     marginBottom: 16,
+    letterSpacing: 0.2,
   },
   description: {
     fontSize: 16,

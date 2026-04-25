@@ -7,10 +7,21 @@ import { AuthProvider } from './src/context/AuthContext';
 import { SkillsProvider } from './src/context/SkillsContext';
 import { SessionProvider } from './src/context/SessionContext';
 import { LanguageProvider } from './src/context/LanguageContext';
+import { LayoutAnimation, Platform, UIManager } from 'react-native';
+
+if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
+  UIManager.setLayoutAnimationEnabledExperimental(true);
+}
+import AnimatedSplashScreen from './src/components/AnimatedSplashScreen';
 
 function AppContent() {
   const { theme } = useTheme();
+  const [showSplash, setShowSplash] = React.useState(true);
   
+  if (showSplash) {
+    return <AnimatedSplashScreen onAnimationEnd={() => setShowSplash(false)} />;
+  }
+
   return (
     <>
       <StatusBar barStyle={theme === 'dark' ? 'light-content' : 'dark-content'} />
