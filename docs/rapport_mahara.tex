@@ -1,0 +1,505 @@
+\documentclass[12pt,a4paper]{article}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[french]{babel}
+\usepackage{geometry}
+\usepackage{longtable}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{hyperref}
+\usepackage{enumitem}
+\usepackage{xcolor}
+\usepackage{graphicx}
+\usepackage{tikz}
+\geometry{margin=2.2cm}
+\setlist[itemize]{leftmargin=1.2cm}
+\setlist[enumerate]{leftmargin=1.2cm}
+
+\title{\textbf{Rapport de projet --- Mahara}\\
+\large Application mobile de developpement de competences}
+\author{Projet Mahara}
+\date{Avril 2026}
+
+\begin{document}
+\maketitle
+\tableofcontents
+\newpage
+
+\section{Resume executif}
+\textbf{Objectif de la section :} presenter la finalite du projet et les decisions majeures.
+
+Mahara est une application mobile React Native orientee apprentissage personnalise multi-competences. Le produit combine generation de plan hebdomadaire (IA + fallback local), suivi de progression (XP, niveau, streak), execution de sessions et quiz de validation. Le systeme cible un usage pedagogique progressif, motive par la gamification, avec persistance locale et synchronisation distante via Supabase.
+
+L'etat actuel du code montre un socle fonctionnel deja significatif : authentification email/OAuth Google, onboarding, gestion de profil, navigation complete, logique metier de progression et planification, ecrans statistiques, et backend Express pour la generation IA. Le rapport formalise ce socle en artefacts projet exploitables par un jury academique : cahier des charges, user stories priorisees, use cases, architecture, gestion des risques, et feuille de route en 6 sprints.
+
+\textbf{Mini-conclusion :} Mahara est techniquement coherent et pedagogiquement pertinent ; la priorite projet est l'alignement complet front/back et la stabilisation qualite pour industrialisation.
+
+\section{Contexte et problematique}
+\textbf{Objectif de la section :} cadrer le besoin utilisateur et le probleme adresse.
+
+Les apprenants souhaitent progresser sur plusieurs competences (musique, photographie, fitness, programmation, etc.) mais rencontrent des obstacles recurrent :
+\begin{itemize}
+  \item absence de plan de travail adapte au niveau reel ;
+  \item difficulte a maintenir la regularite ;
+  \item manque de feedback quantifie sur la progression ;
+  \item faible motivation lorsque l'effort n'est pas visible.
+\end{itemize}
+
+La problematique centrale de Mahara est donc : \textit{comment transformer des objectifs d'apprentissage generaux en parcours hebdomadaires actionnables, motivants et mesurables, dans une experience mobile simple ?}
+
+Le code actuel repond a cette problematique par une architecture couches UI / logique / services / donnees, avec un mode degrade local lorsque l'infrastructure distante n'est pas disponible.
+
+\textbf{Mini-conclusion :} la valeur de Mahara se situe dans la continute d'apprentissage, pas seulement dans la consommation de contenu.
+
+\section{Vision produit et objectifs SMART}
+\textbf{Objectif de la section :} traduire la vision en cibles evaluables.
+
+\subsection{Vision produit}
+Permettre a tout utilisateur de progresser de facon continue sur ses competences en recevant un plan de travail adapte, des activites concretes, et un retour instantane sur ses resultats.
+
+\subsection{Objectifs SMART}
+\begin{longtable}{p{0.2\linewidth}p{0.74\linewidth}}
+\toprule
+\textbf{Objectif} & \textbf{Definition SMART} \\
+\midrule
+Adoption & Atteindre un taux de completion onboarding \textgreater 70\% sur les nouveaux inscrits sur une periode d'observation definie. \\
+Regularite & Obtenir une moyenne de 3 sessions validees par utilisateur actif et par semaine. \\
+Qualite plan & Maintenir un taux d'acceptation des plans generes \textgreater 60\% (draft $\rightarrow$ accepted). \\
+Engagement & Augmenter le taux de retour a J+7 via mecanique streak et progression visible. \\
+Fiabilite & Garantir un fonctionnement nominal en mode local meme sans backend disponible. \\
+\bottomrule
+\end{longtable}
+
+\textbf{Mini-conclusion :} les objectifs privilegient l'impact apprenant (usage et progression) avant la complexite fonctionnelle.
+
+\section{Presentation de l'application Mahara}
+\textbf{Objectif de la section :} presenter le produit tel qu'implante.
+
+\subsection{Stack et structure}
+\begin{itemize}
+  \item Mobile : React Native 0.84, TypeScript, React Navigation.
+  \item Donnees : AsyncStorage (local), Supabase (auth + donnees).
+  \item Backend : Node.js + Express, endpoint de generation de plan.
+  \item Qualite : Jest, tests unitaires sur logique de progression et planification.
+\end{itemize}
+
+\subsection{Fonctionnalites observees}
+\begin{enumerate}
+  \item Authentification email/mot de passe et OAuth Google.
+  \item Onboarding (bienvenue + choix langue).
+  \item Catalogue de competences avec detail des taches.
+  \item Generation plan hebdomadaire (IA si configuree, sinon fallback local).
+  \item Validation plan, demarrage/fin session, mise a jour progression.
+  \item Quiz de verification et ecran de resultats.
+  \item Statistiques globales (XP, niveau, streak, avancement).
+  \item Gestion profil (nom, initiales, avatar, budget hebdomadaire).
+\end{enumerate}
+
+\textbf{Mini-conclusion :} Mahara est deja un produit ``vertical slice'' couvrant la boucle complete d'apprentissage.
+
+\section{Perimetre du projet}
+\textbf{Objectif de la section :} distinguer ce qui est couvert de ce qui ne l'est pas.
+
+\subsection{In scope}
+\begin{itemize}
+  \item Parcours utilisateur de bout en bout : inscription $\rightarrow$ plan $\rightarrow$ session $\rightarrow$ quiz $\rightarrow$ stats.
+  \item Multi-competences et progression individualisee.
+  \item Persistance locale et synchronisation Supabase lorsque configure.
+  \item Back-end de generation de plans IA avec fallback deterministe.
+\end{itemize}
+
+\subsection{Out of scope}
+\begin{itemize}
+  \item Version web desktop dediee.
+  \item Moteur d'analytics avance (cohortes, BI produit).
+  \item Marketplace de contenus tiers.
+  \item Administration enterprise multi-tenant.
+\end{itemize}
+
+\textbf{Mini-conclusion :} le perimetre vise un MVP robuste pedagogique, pas une plateforme enterprise complete.
+
+\section{Cahier des charges}
+\textbf{Objectif de la section :} formaliser les exigences fonctionnelles et techniques.
+
+\subsection{Exigences fonctionnelles}
+\begin{longtable}{p{0.18\linewidth}p{0.76\linewidth}}
+\toprule
+\textbf{ID} & \textbf{Exigence} \\
+\midrule
+F-01 & Le systeme doit permettre l'inscription, la connexion et la deconnexion utilisateur. \\
+F-02 & Le systeme doit gerer un onboarding minimal (langue, demarrage). \\
+F-03 & Le systeme doit afficher un catalogue de competences et leurs taches associees. \\
+F-04 & Le systeme doit generer un plan hebdomadaire selon la difficulte choisie. \\
+F-05 & Le systeme doit utiliser un mode fallback local si l'API IA est indisponible. \\
+F-06 & L'utilisateur doit pouvoir accepter un plan et demarrer une session. \\
+F-07 & Le systeme doit mettre a jour XP, niveau, progression et streak apres completion. \\
+F-08 & Le systeme doit proposer un quiz de validation lorsque les taches planifiees sont completees. \\
+F-09 & Le systeme doit afficher les statistiques globales et par competence. \\
+F-10 & Le systeme doit permettre l'edition du profil (nom, avatar, budget hebdo). \\
+\bottomrule
+\end{longtable}
+
+\subsection{Exigences non fonctionnelles}
+\begin{itemize}
+  \item \textbf{Performance :} navigation fluide et operations utilisateur sans blocage visible.
+  \item \textbf{Disponibilite fonctionnelle :} mode local operationnel meme en absence de Supabase/IA.
+  \item \textbf{Securite :} auth geree par Supabase, politiques RLS sur les tables utilisateur.
+  \item \textbf{Maintenabilite :} separation claire des couches (screens, context, services, logic).
+  \item \textbf{Evolutivite :} schema SQL prevoyant contenus, plans, sessions et achievements.
+\end{itemize}
+
+\subsection{Contraintes techniques et organisationnelles}
+\begin{itemize}
+  \item Stack imposee par l'existant : React Native + Supabase + Node/Express.
+  \item Compatibilite mobile Android/iOS.
+  \item Gestion de configuration via variables d'environnement.
+  \item Public principal : jury academique (traite comme contrainte de formalisation documentaire).
+\end{itemize}
+
+\textbf{Mini-conclusion :} les exigences privilegient la fiabilite pedagogique et la resilience en environnement partiellement connecte.
+
+\section{Parties prenantes et personas}
+\textbf{Objectif de la section :} identifier les utilisateurs et leurs enjeux.
+
+\subsection{Parties prenantes}
+\begin{itemize}
+  \item Apprenant final (utilisateur principal).
+  \item Equipe produit/developpement.
+  \item Encadrant academique / jury.
+  \item Operateur technique (Supabase, API plan generation).
+\end{itemize}
+
+\subsection{Personas}
+\textbf{Persona A --- Lina, etudiante (debutante multi-competences)}\\
+Besoin : plan simple, progression visible, feedback clair.\\
+Point de douleur : demotivation et manque de cadre.
+
+\textbf{Persona B --- Sami, autodidacte (niveau intermediaire)}\\
+Besoin : rythme plus soutenu, challenge progressif, stats fiables.\\
+Point de douleur : dispersion entre plusieurs objectifs.
+
+\textbf{Persona C --- Encadrant academique}\\
+Besoin : preuve de conception methodique, coherence technique, roadmap realiste.
+
+\textbf{Mini-conclusion :} le produit doit simultanement satisfaire un usage quotidien apprenant et une exigence forte de lisibilite projet.
+
+\section{User stories (MoSCoW + criteres d'acceptation)}
+\textbf{Objectif de la section :} transformer les besoins en backlog actionnable.
+
+\begin{longtable}{p{0.08\linewidth}p{0.52\linewidth}p{0.12\linewidth}p{0.22\linewidth}}
+\toprule
+\textbf{ID} & \textbf{User story} & \textbf{Priorite} & \textbf{Critere d'acceptation (extrait)} \\
+\midrule
+US-01 & En tant que nouvel utilisateur, je veux creer un compte afin d'acceder a mon espace. & Must & Compte cree et session activee sans erreur bloquante. \\
+US-02 & En tant qu'utilisateur, je veux me connecter avec Google afin de reduire la friction d'acces. & Must & OAuth declenche et session etablie au retour de callback. \\
+US-03 & En tant qu'utilisateur, je veux choisir ma langue afin d'avoir une interface comprehensible. & Should & Choix persiste et applique sur les ecrans principaux. \\
+US-04 & En tant qu'utilisateur, je veux voir mes competences afin de choisir mon axe de progression. & Must & Home affiche les cartes competences avec niveau/progression. \\
+US-05 & En tant qu'utilisateur, je veux generer un plan en difficulte facile/moyen/difficile afin d'adapter l'effort. & Must & Plan genere avec sessions, durees et taches recommandees. \\
+US-06 & En tant qu'utilisateur, je veux valider un plan afin de lancer ma semaine d'apprentissage. & Must & Statut plan passe en accepted et visible dans detail competence. \\
+US-07 & En tant qu'utilisateur, je veux terminer une session afin de gagner de l'XP. & Must & XP et taches maj apres completion de session. \\
+US-08 & En tant qu'utilisateur, je veux voir mes stats globales afin de mesurer mes progres. & Must & Ecran stats affiche XP total, niveau, streak et progression. \\
+US-09 & En tant qu'utilisateur, je veux passer un quiz lorsque mes taches sont finies afin de valider mes acquis. & Should & Bouton quiz disponible uniquement quand conditions remplies. \\
+US-10 & En tant qu'utilisateur, je veux recevoir un feedback de quiz afin d'identifier mes points faibles. & Should & Ecran resultats affiche score, grade et message de feedback. \\
+US-11 & En tant qu'utilisateur, je veux modifier mon profil afin de personnaliser mon experience. & Should & Nom/avatar/budget enregistres localement et distant si possible. \\
+US-12 & En tant qu'utilisateur, je veux utiliser l'app hors ligne afin de continuer meme sans reseau. & Must & Fonctions critiques disponibles via persistence locale. \\
+US-13 & En tant qu'utilisateur, je veux avoir des objectifs de streak afin de rester regulier. & Should & Streak calcule et affiche dans les ecrans pertinents. \\
+US-14 & En tant qu'utilisateur, je veux debloquer des achievements afin de rester motive. & Could & Progression achievements stockee et consultable. \\
+US-15 & En tant que systeme, je veux basculer en fallback si l'IA echoue afin de garantir un plan. & Must & Reponse fallback valide retournee sans rupture UX. \\
+US-16 & En tant qu'administrateur technique, je veux verifier la sante API afin de monitorer le service. & Should & Endpoint /health repond ok. \\
+US-17 & En tant que product owner, je veux tracer les plans drafts/accepted afin de mesurer l'utilite des suggestions. & Could & Enregistrements weekly\_plans exploitables. \\
+US-18 & En tant que jury, je veux une architecture claire afin d'evaluer la qualite d'ingenierie. & Must & Documentation decrivant couches, flux et responsabilites. \\
+\bottomrule
+\end{longtable}
+
+\textbf{Mini-conclusion :} la priorisation met l'accent sur la boucle d'apprentissage complete et la robustesse offline.
+
+\section{Use cases}
+\textbf{Objectif de la section :} decrire les scenarios metier critiques.
+
+\subsection{UC-01 --- Authentification utilisateur}
+\textbf{Acteurs :} Utilisateur, Supabase Auth.\\
+\textbf{Preconditions :} l'application est lancee.\\
+\textbf{Scenario nominal :}
+\begin{enumerate}
+  \item L'utilisateur saisit ses identifiants (ou OAuth).
+  \item Le systeme valide les informations.
+  \item Une session est etablie.
+  \item Le profil est charge/cree.
+\end{enumerate}
+\textbf{Alternatives :} credentials invalides, echec reseau, callback OAuth invalide.\\
+\textbf{Postconditions :} utilisateur authentifie, navigation vers flux applicatif.
+
+\subsection{UC-02 --- Completion onboarding}
+\textbf{Acteurs :} Utilisateur.\\
+\textbf{Preconditions :} utilisateur authentifie, onboarding incomplet.\\
+\textbf{Scenario nominal :} affichage ecran bienvenue, choix langue, marquage onboarding complete.\\
+\textbf{Postconditions :} acces aux tabs principaux.
+
+\subsection{UC-03 --- Generation de plan}
+\textbf{Acteurs :} Utilisateur, service IA/fallback, backend API.\\
+\textbf{Preconditions :} competence selectionnee, difficulte choisie.\\
+\textbf{Scenario nominal :}
+\begin{enumerate}
+  \item L'utilisateur demande la regeneration du plan.
+  \item Le front envoie les donnees skill/taches/difficulte.
+  \item Le backend tente generation IA.
+  \item Si plan valide : retour source ``ai'' ; sinon fallback local.
+  \item Le plan est affiche puis sauvegarde en draft.
+\end{enumerate}
+\textbf{Postconditions :} plan draft disponible pour validation.
+
+\subsection{UC-04 --- Validation plan et execution session}
+\textbf{Acteurs :} Utilisateur.\\
+\textbf{Preconditions :} plan genere.\\
+\textbf{Scenario nominal :} validation plan, demarrage session, completion session, maj progression.\\
+\textbf{Postconditions :} tache completee, XP ajoutee, etat session ferme.
+
+\subsection{UC-05 --- Quiz de verification}
+\textbf{Acteurs :} Utilisateur.\\
+\textbf{Preconditions :} taches planifiees completees.\\
+\textbf{Scenario nominal :} lancement quiz, reponses, calcul score, affichage feedback.\\
+\textbf{Postconditions :} resultat en fin de parcours, eventuelle relance quiz.
+
+\subsection{UC-06 --- Consultation statistiques}
+\textbf{Acteurs :} Utilisateur.\\
+\textbf{Preconditions :} donnees progression disponibles.\\
+\textbf{Scenario nominal :} consultation indicateurs globaux et progression par competence.\\
+\textbf{Postconditions :} comprehension de l'avancement.
+
+\subsection{UC-07 --- Edition profil}
+\textbf{Acteurs :} Utilisateur.\\
+\textbf{Preconditions :} utilisateur connecte.\\
+\textbf{Scenario nominal :} modification nom/initiales/budget/avatar, sauvegarde locale et distante.\\
+\textbf{Postconditions :} profil mis a jour.
+
+\textbf{Mini-conclusion :} les use cases couvrent les flux critiques utilises en evaluation academique et en usage reel.
+
+\section{Diagramme et architecture logique}
+\textbf{Objectif de la section :} visualiser les flux techniques majeurs.
+
+\subsection{Diagramme d'architecture (vue simplifiee)}
+\begin{figure}[h!]
+\centering
+\begin{tikzpicture}[node distance=1.6cm, every node/.style={font=\small}]
+  \node[draw, rounded corners, fill=blue!10, minimum width=4.3cm, minimum height=1cm] (ui) {UI Mobile (Screens + Navigation)};
+  \node[draw, rounded corners, fill=green!10, below of=ui, minimum width=4.3cm, minimum height=1cm] (ctx) {Contexts (Auth / Skills / Session)};
+  \node[draw, rounded corners, fill=yellow!15, below left=1.6cm and 1.7cm of ctx, minimum width=4.3cm, minimum height=1cm] (logic) {Logique metier (plan/progression/quiz)};
+  \node[draw, rounded corners, fill=orange!15, below right=1.6cm and 1.7cm of ctx, minimum width=4.3cm, minimum height=1cm] (services) {Services (auth, plans, progress, profile)};
+  \node[draw, rounded corners, fill=purple!12, below of=services, minimum width=4.3cm, minimum height=1cm] (api) {Backend API Express (/generate-plan)};
+  \node[draw, rounded corners, fill=gray!15, below of=logic, minimum width=4.3cm, minimum height=1cm] (local) {AsyncStorage (offline)};
+  \node[draw, rounded corners, fill=red!10, below of=api, minimum width=4.3cm, minimum height=1cm] (db) {Supabase (Auth + DB + RLS)};
+
+  \draw[->, thick] (ui) -- (ctx);
+  \draw[->, thick] (ctx) -- (logic);
+  \draw[->, thick] (ctx) -- (services);
+  \draw[->, thick] (services) -- (api);
+  \draw[->, thick] (services) -- (db);
+  \draw[->, thick] (services) -- (local);
+  \draw[->, thick] (api) -- (db);
+\end{tikzpicture}
+\caption{Architecture applicative Mahara (vue logique)}
+\end{figure}
+
+\subsection{Explication}
+L'interface consomme les contexts comme point d'entree applicatif. Les contexts orchestrent la logique metier (calcul progression, generation fallback) et les services d'infrastructure (auth, persistance, API). Le backend ne porte qu'une responsabilite specialisee : produire un plan IA valide et basculer en fallback si necessaire.
+
+\textbf{Mini-conclusion :} la separation des responsabilites est claire, facilitant testabilite et evolution.
+
+\section{Architecture technique detaillee}
+\textbf{Objectif de la section :} documenter les composants et leurs interactions.
+
+\subsection{Cartographie des composants majeurs}
+\begin{longtable}{p{0.28\linewidth}p{0.66\linewidth}}
+\toprule
+\textbf{Composant} & \textbf{Responsabilite} \\
+\midrule
+App.tsx & Montage providers (Language, Theme, Auth, Skills, Session) et navigation racine. \\
+RootNavigator & Routage conditionnel selon etat auth + onboarding. \\
+PlanScreen & Generation/validation des plans, interactions AI + fallback. \\
+SkillDetailScreen & Affichage taches planifiees, completion et passage quiz. \\
+StatsScreen / ProfileScreen & Restitution indicateurs progression + engagement. \\
+AuthContext & Session utilisateur, flux sign-in/sign-up/OAuth, profil et onboarding. \\
+SkillsContext & Chargement/sauvegarde progression, metriques globales. \\
+SessionContext & Plans acceptes, sessions actives, completion session. \\
+planGenerator.ts & Generation locale des plans selon difficulte. \\
+progression.ts & Calcul XP, niveau, progression, streak. \\
+aiPlanService.ts & Appel API de generation distante et validation reponse. \\
+server/index.js & Endpoint /generate-plan, generation IA, fallback, health check. \\
+server/schema.sql & Modele relationnel complet (profiles, content, plans, sessions, achievements). \\
+\bottomrule
+\end{longtable}
+
+\subsection{Donnees et coherence}
+Le schema SQL prevoit un modele riche orientee apprentissage. Le front exploite une partie simplifiee du modele et conserve un mode local fort. Une trajectoire d'alignement est recommandee pour harmoniser completement les structures \texttt{weekly\_plans}, \texttt{plan\_sessions} et \texttt{skills\_progress}.
+
+\textbf{Mini-conclusion :} l'architecture est solide, avec un chantier d'alignement schema/front pour fiabiliser la synchronisation.
+
+\section{Plan projet en 6 sprints}
+\textbf{Objectif de la section :} proposer une execution incrementalement livrable.
+
+\subsection*{Sprint 1 --- Fondations et securisation Auth}
+\textbf{Objectifs :} stabiliser login/signup/OAuth, durcir gestion erreurs auth.\\
+\textbf{Stories :} US-01, US-02, US-03.\\
+\textbf{Livrables :} parcours auth stable, onboarding valide, messages erreur normalises.\\
+\textbf{Validation :} connexions nominales + cas d'echec maitrises.\\
+\textbf{Risques :} variabilite callback OAuth.
+
+\subsection*{Sprint 2 --- Catalogue competences et progression}
+\textbf{Objectifs :} fiabiliser chargement skills et mise a jour progression.\\
+\textbf{Stories :} US-04, US-07, US-13.\\
+\textbf{Livrables :} home/detail competence robustes, metriques coherentes.\\
+\textbf{Validation :} progression deterministic apres completion taches.\\
+\textbf{Risques :} incoherence local vs distant.
+
+\subsection*{Sprint 3 --- Generation et validation des plans}
+\textbf{Objectifs :} fiabiliser pipeline plan AI + fallback + acceptation.\\
+\textbf{Stories :} US-05, US-06, US-15, US-17.\\
+\textbf{Livrables :} plans exploitables en toutes conditions.\\
+\textbf{Validation :} aucun blocage utilisateur si IA indisponible.\\
+\textbf{Risques :} qualite variable des sorties IA.
+
+\subsection*{Sprint 4 --- Sessions, quiz et feedback pedagogique}
+\textbf{Objectifs :} renforcer la boucle ``faire + verifier''.\\
+\textbf{Stories :} US-08, US-09, US-10.\\
+\textbf{Livrables :} quiz robuste, resultat interpretable, feedback actionnable.\\
+\textbf{Validation :} passage quiz conditionnel correct et calcul score fiable.\\
+\textbf{Risques :} couverture de questions insuffisante selon competences.
+
+\subsection*{Sprint 5 --- Profil, engagement et achievements}
+\textbf{Objectifs :} personnalisation, motivation long terme, coherence UX.\\
+\textbf{Stories :} US-11, US-12, US-14.\\
+\textbf{Livrables :} edition profil complete, gestion achievements stable.\\
+\textbf{Validation :} persistance correcte apres redemarrage application.\\
+\textbf{Risques :} dette UX sur ecrans denses.
+
+\subsection*{Sprint 6 --- Industrialisation et readiness}
+\textbf{Objectifs :} qualite, observabilite, documentation finale, demo jury.\\
+\textbf{Stories :} US-16, US-18.\\
+\textbf{Livrables :} dossier technique, scripts de verification, argumentaire final.\\
+\textbf{Validation :} package demo complet et reproductible.\\
+\textbf{Risques :} derive perimetre en fin de cycle.
+
+\textbf{Mini-conclusion :} le decoupage en 6 sprints suit la logique valeur-utilisateur puis durcissement technique.
+
+\section{Strategie de test et qualite}
+\textbf{Objectif de la section :} assurer robustesse fonctionnelle et technique.
+
+\subsection{Niveaux de test}
+\begin{itemize}
+  \item \textbf{Unitaire :} logique progression, generation plan, services critiques.
+  \item \textbf{Integration :} contexts + services (auth, plans, progression).
+  \item \textbf{Fonctionnel :} flux utilisateur complets sur ecrans principaux.
+  \item \textbf{Non regression :} scenarios auth/plan/session/quiz apres modifications.
+\end{itemize}
+
+\subsection{Criteres de qualite}
+\begin{itemize}
+  \item zero blocage sur flux must-have ;
+  \item coherence des metriques (XP, niveau, progression) ;
+  \item absence de perte de donnees utilisateur entre sessions.
+\end{itemize}
+
+\textbf{Mini-conclusion :} la qualite est centree sur la fiabilite du parcours apprenant complet.
+
+\section{Deploiement et maintenance}
+\textbf{Objectif de la section :} definir l'exploitation apres livraison.
+
+\subsection{Deploiement cible}
+\begin{itemize}
+  \item Application mobile distribuee Android/iOS.
+  \item API backend deployable sur service Node managé.
+  \item Supabase comme socle auth + base relationnelle + RLS.
+\end{itemize}
+
+\subsection{Maintenance}
+\begin{itemize}
+  \item Correctifs fonctionnels sur ecrans critiques.
+  \item Evolution catalogue competences/contenus.
+  \item Monitoring disponibilite API et erreurs auth.
+  \item Revue periodique securite et permissions RLS.
+\end{itemize}
+
+\textbf{Mini-conclusion :} le maintien en condition operationnelle repose sur une discipline simple : observabilite, correctifs rapides, et evolution incrementale.
+
+\section{Risques et plan de mitigation}
+\textbf{Objectif de la section :} anticiper les points de rupture du projet.
+
+\begin{longtable}{p{0.28\linewidth}p{0.28\linewidth}p{0.36\linewidth}}
+\toprule
+\textbf{Risque} & \textbf{Impact} & \textbf{Mitigation} \\
+\midrule
+Dependance IA externe & Plan non genere ou non pertinent & Validation stricte + fallback local obligatoire. \\
+Desalignement front/schema & Donnees incoherentes en sync & Mapping contractuel et tests integration DB. \\
+Complexite UX multi-ecrans & Abandon utilisateur & Simplification parcours, coherence des messages et CTA. \\
+Erreurs OAuth/callback & Echec d'acces compte & Durcissement deep links et journaux d'erreur exploitables. \\
+Dette technique cumulative & Ralentissement des sprints finaux & Sprint 6 dedie a hardening/documentation. \\
+\bottomrule
+\end{longtable}
+
+\textbf{Mini-conclusion :} le risque principal est l'incoherence inter-couches ; la mitigation centrale est contractuelle (schemas, validations, tests).
+
+\section{Conclusion et recommandations}
+\textbf{Objectif de la section :} cloturer le rapport avec des recommandations actionnables.
+
+Mahara presente une base technique credible et deja orientee valeur utilisateur. Le projet couvre les fondamentaux d'une application d'apprentissage moderne : personnalisation, progression quantifiee, feedback, et resilience operationnelle.
+
+Les recommandations prioritaires sont :
+\begin{enumerate}
+  \item finaliser l'alignement front/back des modeles de donnees plan/session/progression ;
+  \item industrialiser la qualite sur les flux must-have (auth, plan, session, quiz) ;
+  \item enrichir progressivement les contenus pedagogiques selon usage reel ;
+  \item consolider la documentation technique pour maintien long terme.
+\end{enumerate}
+
+\textbf{Mini-conclusion :} le projet est pret pour une phase de consolidation menant a une version academiquement defendable et techniquement robuste.
+
+\section{Estimation de pagination par section}
+\textbf{Objectif de la section :} verifier la cible de 20 a 25 pages.
+
+\begin{longtable}{p{0.62\linewidth}p{0.3\linewidth}}
+\toprule
+\textbf{Section} & \textbf{Volume estime} \\
+\midrule
+Resume executif & 1 page \\
+Contexte et problematique & 1.5 pages \\
+Vision et objectifs SMART & 1.5 pages \\
+Presentation de Mahara & 1.5 pages \\
+Perimetre projet & 1 page \\
+Cahier des charges & 2.5 pages \\
+Parties prenantes et personas & 1.5 pages \\
+User stories & 2.5 pages \\
+Use cases & 2.5 pages \\
+Diagramme et architecture logique & 1.5 pages \\
+Architecture technique detaillee & 1.5 pages \\
+Plan en 6 sprints & 2 pages \\
+Strategie de test et qualite & 1 page \\
+Deploiement et maintenance & 1 page \\
+Risques et mitigation & 1 page \\
+Conclusion et recommandations & 1 page \\
+Glossaire & 1 page \\
+\midrule
+\textbf{Total estime} & \textbf{23 pages} \\
+\bottomrule
+\end{longtable}
+
+\section{Glossaire}
+\textbf{Objectif de la section :} harmoniser la comprehension des termes techniques.
+
+\begin{longtable}{p{0.25\linewidth}p{0.67\linewidth}}
+\toprule
+\textbf{Terme} & \textbf{Definition} \\
+\midrule
+XP & Points d'experience attribues lors de l'execution des taches/sessions. \\
+Streak & Nombre de jours ou sessions consecutifs maintenus sans interruption. \\
+Fallback & Strategie de secours utilisee en cas d'echec d'un service principal (ex. IA). \\
+RLS & Row Level Security : politiques d'acces par ligne en base de donnees. \\
+Onboarding & Parcours initial de prise en main de l'application. \\
+Use case & Description d'une interaction metier entre acteur et systeme. \\
+User story & Besoin exprime du point de vue utilisateur, souvent avec criteres d'acceptation. \\
+MoSCoW & Methode de priorisation : Must, Should, Could, Won't. \\
+AsyncStorage & Stockage local persistant cote application mobile. \\
+Supabase & Plateforme backend (authentification, base PostgreSQL, API). \\
+\bottomrule
+\end{longtable}
+
+\end{document}
